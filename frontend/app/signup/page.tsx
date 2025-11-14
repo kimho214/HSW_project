@@ -14,39 +14,42 @@ export default function SignupPage() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    // 1. 비밀번호 확인
-    if (password !== passwordConfirm) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
+  if (password !== passwordConfirm) {
+    setError("비밀번호가 일치하지 않습니다.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:5000/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        role
+      })
+    });
+
+    const data = await response.json();
+    console.log("백엔드 응답:", data);
+
+    if (response.ok) {
+      alert("회원가입 성공!");
+      router.push("/login");
+    } else {
+      setError(data.detail || "회원가입에 실패했습니다.");
     }
 
-    // --- TODO: '김호'님의 백엔드 API와 연동 ---
-    // 1. API 주소 확인 (예: 'http://localhost:8000/api/auth/signup')
-    // 2. fetch 또는 axios로 POST 요청 (email, password, username, role 전송)
-    // 3. 응답(response) 처리
-    // ----------------------------------------
+  } catch (err) {
+    console.error(err);
+    setError("서버와 통신 중 오류가 발생했습니다.");
+  }
+};
 
-    console.log("회원가입 시도:", { email, password, username, role });
-
-    // [임시] 회원가입 성공 시 로그인 페이지로 이동
-    try {
-      // (여기에 fetch API 호출 코드)
-      // const response = await fetch('백엔드_API_주소', { ... });
-      // const data = await response.json();
-      
-      // if (response.ok) {
-        alert("회원가입 성공! 로그인 페이지로 이동합니다.");
-        router.push("/login"); // 로그인 페이지로 이동
-      // } else {
-      //   setError(data.message || "회원가입에 실패했습니다.");
-      // }
-    } catch (err) {
-      setError("서버와 통신 중 오류가 발생했습니다.");
-    }
-  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

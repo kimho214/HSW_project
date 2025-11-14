@@ -1,35 +1,41 @@
-"use client"; // 🔴 'useState'와 'useRouter'를 사용하려면 꼭 필요합니다.
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // 🔴 Next.js 13+ App Router 방식
-import Link from "next/link"; // 🔴 Next.js의 Link 컴포넌트
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
   const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ✅ 실제 로그인 요청 함수
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // 에러 메시지 초기화
+    setError("");
 
-    // --- TODO: '김호'님의 백엔드 API와 연동 ---
-    // 1. API 주소 확인 (예: 'http://localhost:8000/api/auth/login')
-    // 2. fetch 또는 axios로 POST 요청
-    // 3. 응답(response) 처리
-    // ----------------------------------------
+    const res = await fetch("http://localhost:5000/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-    console.log("로그인 시도:", email, password);
+    const data = await res.json();
+    console.log("백엔드 응답:", data);
 
-    // [임시] 로그인 성공 시 메인 페이지로 이동
-    // 실제로는 백엔드 응답(성공)을 확인한 후에 이동해야 합니다.
-    if (email === "test@test.com" && password === "1234") {
-      alert("로그인 성공!"); // (임시 알림)
-      router.push("/"); // 메인 페이지(/)로 이동
+    if (data.message === "success") {
+      // JWT 쿠키 저장
+      document.cookie = `token=${data.token}; path=/`;
+
+      // role 따라 페이지 이동
+      if (data.role === "STUDENT") {
+        router.push("/student/dashboard");
+      } else {
+        router.push("/business/dashboard");
+      }
     } else {
-      // [임시] 로그인 실패 처리
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      setError("이메일 혹은 비밀번호가 잘못되었습니다.");
     }
   };
 
@@ -50,12 +56,11 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        {/* 🔵 여기에서 onSubmit이 handleLogin을 호출해야 한다! */}
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">
-                이메일 주소
-              </label>
               <input
                 id="email-address"
                 name="email"
@@ -68,10 +73,8 @@ export default function LoginPage() {
                 placeholder="이메일 주소"
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
-                비밀번호
-              </label>
               <input
                 id="password"
                 name="password"
@@ -92,17 +95,6 @@ export default function LoginPage() {
               <p className="text-sm font-medium text-red-800">{error}</p>
             </div>
           )}
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                비밀번호를 잊으셨나요?
-              </a>
-            </div>
-          </div>
 
           <div>
             <button
