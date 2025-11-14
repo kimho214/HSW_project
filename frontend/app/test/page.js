@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "../utils/axios";
+import axios from "../../utils/axios";
 
 export default function Home() {
   const [message, setMessage] = useState("백엔드에서 메시지를 가져오는 중...");
