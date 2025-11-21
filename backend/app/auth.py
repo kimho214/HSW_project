@@ -16,13 +16,26 @@ SECRET_KEY = "mysecretkey"  # 나중에 .env로 분리 가능
 def signup():
     data = request.get_json()
 
-    username = data.get("username")
     email = data.get("email")
     password = data.get("password")
-    role = data.get("role")
+    role = data.get("role")  # "STUDENT" or "BUSINESS"
 
-    if not username or not email or not password or not role:
+    # 공통 필수 필드 검증
+    if not email or not password or not role:
         return jsonify({"message": "missing fields"}), 400
+
+    # 역할별 추가 필드 검증
+    if role == "STUDENT":
+        name = data.get("name")
+        if not name:
+            return jsonify({"message": "name is required for students"}), 400
+    elif role == "BUSINESS":
+        business_name = data.get("business_name")
+        address = data.get("address")
+        if not business_name or not address:
+            return jsonify({"message": "business_name and address are required for businesses"}), 400
+    else:
+        return jsonify({"message": "invalid role"}), 400
 
     hashed_pw = generate_password_hash(password)
 
@@ -30,17 +43,37 @@ def signup():
         conn = get_db()
         cursor = conn.cursor()
 
-        sql = """
-        INSERT INTO users (username, email, password, role)
-        VALUES (%s, %s, %s, %s)
+        # 1. users 테이블에 기본 정보 삽입
+        sql_user = """
+        INSERT INTO users (email, password, role)
+        VALUES (%s, %s, %s)
         """
-        cursor.execute(sql, (username, email, hashed_pw, role))
-        conn.commit()
+        cursor.execute(sql_user, (email, hashed_pw, role))
+        user_id = cursor.lastrowid  # 방금 생성된 user의 ID
 
+        # 2. 역할별로 상세 정보 테이블에 삽입
+        if role == "STUDENT":
+            sql_student = """
+            INSERT INTO students (user_id, name)
+            VALUES (%s, %s)
+            """
+            cursor.execute(sql_student, (user_id, name))
+        elif role == "BUSINESS":
+            sql_business = """
+            INSERT INTO businesses (user_id, business_name, address)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(sql_business, (user_id, business_name, address))
+
+        conn.commit()
         return jsonify({"message": "success"}), 201
 
     except Exception as e:
+        conn.rollback()  # 에러 발생 시 롤백
         return jsonify({"message": "error", "detail": str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -72,6 +105,20 @@ def login():
         if not check_password_hash(user["password"], password):
             return jsonify({"message": "wrong password"}), 401
 
+        # 역할별 상세 정보 가져오기
+        user_detail = {}
+        if user["role"] == "STUDENT":
+            cursor.execute("SELECT name FROM students WHERE user_id=%s", (user["id"],))
+            student = cursor.fetchone()
+            if student:
+                user_detail["name"] = student["name"]
+        elif user["role"] == "BUSINESS":
+            cursor.execute("SELECT business_name, address FROM businesses WHERE user_id=%s", (user["id"],))
+            business = cursor.fetchone()
+            if business:
+                user_detail["business_name"] = business["business_name"]
+                user_detail["address"] = business["address"]
+
         # JWT 토큰 생성
         payload = {
             "id": user["id"],
@@ -85,8 +132,12 @@ def login():
         return jsonify({
             "message": "success",
             "token": token,
-            "role": user["role"]
+            "role": user["role"],
+            "user_detail": user_detail
         }), 200
 
     except Exception as e:
         return jsonify({"message": "error", "detail": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
