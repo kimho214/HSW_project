@@ -8,48 +8,63 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [username, setUsername] = useState("");
   const [role, setRole] = useState("STUDENT"); // 'STUDENT' 또는 'BUSINESS'
+  
+  // 학생용 필드
+  const [name, setName] = useState("");
+  
+  // 소상공인용 필드
+  const [businessName, setBusinessName] = useState("");
+  const [address, setAddress] = useState("");
+  
   const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  if (password !== passwordConfirm) {
-    setError("비밀번호가 일치하지 않습니다.");
-    return;
-  }
-
-  try {
-    const response = await fetch("http://localhost:5000/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username,
-        email,
-        password,
-        role
-      })
-    });
-
-    const data = await response.json();
-    console.log("백엔드 응답:", data);
-
-    if (response.ok) {
-      alert("회원가입 성공!");
-      router.push("/login");
-    } else {
-      setError(data.detail || "회원가입에 실패했습니다.");
+    if (password !== passwordConfirm) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
     }
 
-  } catch (err) {
-    console.error(err);
-    setError("서버와 통신 중 오류가 발생했습니다.");
-  }
-};
+    // 역할별로 다른 데이터 구성
+    let requestBody: any = {
+      email,
+      password,
+      role
+    };
 
+    if (role === "STUDENT") {
+      requestBody.name = name;
+    } else if (role === "BUSINESS") {
+      requestBody.business_name = businessName;
+      requestBody.address = address;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+      console.log("백엔드 응답:", data);
+
+      if (response.ok) {
+        alert("회원가입 성공!");
+        router.push("/login");
+      } else {
+        setError(data.message || data.detail || "회원가입에 실패했습니다.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError("서버와 통신 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -100,22 +115,61 @@ export default function SignupPage() {
           </div>
 
           <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="username" className="sr-only">
-                이름
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="name"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder={role === "STUDENT" ? "이름" : "가게 이름 (상호명)"}
-              />
-            </div>
+            {/* 역할별로 다른 필드 표시 */}
+            {role === "STUDENT" ? (
+              // 학생용: 이름
+              <div>
+                <label htmlFor="name" className="sr-only">
+                  이름
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  placeholder="이름"
+                />
+              </div>
+            ) : (
+              // 소상공인용: 상호명 + 주소
+              <>
+                <div>
+                  <label htmlFor="business-name" className="sr-only">
+                    상호명
+                  </label>
+                  <input
+                    id="business-name"
+                    name="business-name"
+                    type="text"
+                    required
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                    placeholder="상호명 (예: 김사장 떡볶이)"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="address" className="sr-only">
+                    주소
+                  </label>
+                  <input
+                    id="address"
+                    name="address"
+                    type="text"
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="relative block w-full appearance-none rounded-none border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                    placeholder="주소 (예: 서울시 강남구)"
+                  />
+                </div>
+              </>
+            )}
+
             <div>
               <label htmlFor="email-address" className="sr-only">
                 이메일 주소
