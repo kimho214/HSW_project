@@ -8,34 +8,52 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ✅ 실제 로그인 요청 함수
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const res = await fetch("http://localhost:5000/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    console.log("🔐 로그인 시도 시작");
+    console.log("이메일:", email);
+    console.log("비밀번호 길이:", password.length);
 
-    const data = await res.json();
-    console.log("백엔드 응답:", data);
+    try {
+      console.log("📡 API 호출 중...");
+      
+      const response = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (data.message === "success") {
-      // JWT 쿠키 저장
-      document.cookie = `token=${data.token}; path=/`;
+      console.log("📨 응답 받음, 상태:", response.status);
 
-      // role 따라 페이지 이동
-      if (data.role === "STUDENT") {
-        router.push("/student/dashboard");
+      const data = await response.json();
+      console.log("📦 백엔드 응답:", data);
+
+      if (response.ok && data.message === "success") {
+        console.log("✅ 로그인 성공!");
+        
+        // JWT 쿠키 저장
+        document.cookie = `token=${data.token}; path=/`;
+
+        alert("로그인 성공!");
+        
+        // 메인 페이지로 이동 + 리로드 (Header가 로그인 상태를 감지하도록)
+        router.push("/");
+        window.location.href = "/"; // 강제 리로드
       } else {
-        router.push("/business/dashboard");
+        console.log("❌ 로그인 실패:", data.message);
+        setError(data.message || "이메일 또는 비밀번호가 올바르지 않습니다.");
       }
-    } else {
-      setError("이메일 혹은 비밀번호가 잘못되었습니다.");
+    } catch (err) {
+      console.error("❌❌❌ 에러 발생:", err);
+      setError("서버와 통신 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,7 +62,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            로그인
+            로그인 (테스트 버전)
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             또는{" "}
@@ -57,10 +75,12 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* 🔵 여기에서 onSubmit이 handleLogin을 호출해야 한다! */}
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
+              <label htmlFor="email-address" className="sr-only">
+                이메일 주소
+              </label>
               <input
                 id="email-address"
                 name="email"
@@ -75,6 +95,9 @@ export default function LoginPage() {
             </div>
 
             <div>
+              <label htmlFor="password" className="sr-only">
+                비밀번호
+              </label>
               <input
                 id="password"
                 name="password"
@@ -99,10 +122,15 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              disabled={loading}
+              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
             >
-              로그인
+              {loading ? "로그인 중..." : "로그인"}
             </button>
+          </div>
+
+          <div className="text-center text-sm text-gray-600">
+            <p>F12 → Console 탭을 열어서 로그를 확인하세요!</p>
           </div>
         </form>
       </div>
