@@ -1,10 +1,15 @@
+import os
+from dotenv import load_dotenv
 import mysql.connector
+
+load_dotenv()  # .env 파일 불러오기
 
 def get_db():
     conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="kimho13254@",
-        database="talent_match"
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
+        port=os.getenv("DB_PORT")
     )
     return conn
