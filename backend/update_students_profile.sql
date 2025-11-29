@@ -1,0 +1,10 @@
+-- MySQL 5.7에서는 ADD COLUMN IF NOT EXISTS가 지원되지 않아 제거했습니다.
+-- 이미 컬럼이 있다면 해당 ALTER 문은 실패하므로 최초 1회만 실행하세요.
+ALTER TABLE students
+ADD COLUMN introduction TEXT,
+ADD COLUMN skills TEXT,
+ADD COLUMN portfolio_url VARCHAR(500),
+ADD COLUMN github_url VARCHAR(500),
+ADD COLUMN linkedin_url VARCHAR(500),
+ADD COLUMN is_profile_public BOOLEAN DEFAULT TRUE,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

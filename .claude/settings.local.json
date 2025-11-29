@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./venv/Scripts/python.exe -c \"import google.generativeai as genai; genai.configure(api_key=''AIzaSyDtlcGXLm7w68nXn-mk3DOVKH1xUYzpPMQ''); model = genai.GenerativeModel(''gemini-2.5-flash''); response = model.generate_content(''성실한 학생입니다를 2줄로 확장해주세요''); print(''API 연결 성공!''); print(response.text)\")",
+      "Bash(git merge:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n프로젝트 전체 업데이트: 마이페이지 개선, AI 자기소개 기능, 비밀번호 변경 기능 추가\n\n- 마이페이지 4탭 구조로 개선 (대시보드, 지원현황/프로젝트관리, 통계, 설정)\n- AI 자기소개 생성 기능 추가 (Google Gemini API 연동)\n- 비밀번호 변경 기능 구현 (JWT 인증)\n- README.md 및 설치 가이드 추가\n- requirements.txt, .env.example 파일 추가\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
