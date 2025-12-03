@@ -123,8 +123,6 @@ def create_project():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -178,8 +176,6 @@ def get_projects():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -248,8 +244,6 @@ def get_my_projects():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -293,8 +287,6 @@ def get_project_detail(project_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -370,8 +362,6 @@ def update_project(project_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -429,5 +419,3 @@ def delete_project(project_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
