@@ -95,7 +95,7 @@ def create_project():
 
         sql = """
         INSERT INTO projects (business_id, title, description, location, salary, duration, required_skills)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
         """
         cursor.execute(sql, (
             payload["id"],
@@ -108,7 +108,7 @@ def create_project():
         ))
 
         conn.commit()
-        project_id = cursor.lastrowid
+        project_id = cursor.fetchone()['id']
 
         return jsonify({
             "message": "project created successfully",
