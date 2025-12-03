@@ -88,8 +88,6 @@ def create_application():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -167,8 +165,6 @@ def get_project_applications(project_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -245,8 +241,6 @@ def get_my_applications():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -320,5 +314,3 @@ def update_application_status(application_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
