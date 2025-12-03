@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-auth_bp = Blueprint("auth_bp", __name__)
+auth_bp = Blueprint("auth", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -103,7 +103,7 @@ def login():
         conn = None
         cursor = None
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor() # psycopg2에서는 cursor_factory를 사용하므로 인자 없이 생성
 
         cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
@@ -200,7 +200,7 @@ def change_password():
         conn = None
         cursor = None
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor() # psycopg2에서는 cursor_factory를 사용하므로 인자 없이 생성
 
         # 현재 사용자 정보 조회
         cursor.execute("SELECT password FROM users WHERE id=%s", (user_id,))
