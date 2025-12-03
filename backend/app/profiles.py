@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-profiles_bp = Blueprint("profiles", __name__)
+profiles_bp = Blueprint("profiles_bp", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -74,8 +74,6 @@ def get_my_profile():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -145,8 +143,6 @@ def update_my_profile():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -204,8 +200,6 @@ def get_public_profiles():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -253,5 +247,3 @@ def get_profile_by_id(user_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
