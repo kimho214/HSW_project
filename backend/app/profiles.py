@@ -16,17 +16,8 @@ if not SECRET_KEY:
 # ============================
 #   내 프로필 조회 API (학생만 가능)
 # ============================
-@profiles_bp.route("/my", methods=["GET", "OPTIONS"])
+@profiles_bp.route("/my", methods=["GET"])
 def get_my_profile():
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        # PUT 프리플라이트도 통과시키기 위해 PUT 포함
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -90,16 +81,8 @@ def get_my_profile():
 # ============================
 #   프로필 등록/수정 API (학생만 가능)
 # ============================
-@profiles_bp.route("/my", methods=["PUT", "OPTIONS"])
+@profiles_bp.route("/my", methods=["PUT"])
 def update_my_profile():
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'PUT,GET,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
