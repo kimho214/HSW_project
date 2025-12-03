@@ -139,12 +139,19 @@ def login():
                 user_detail["business_name"] = biz["business_name"]
                 user_detail["address"] = biz["address"]
 
+        # JWT 토큰에 이름/상호명 포함
         payload = {
             "id": user["id"],
             "email": user["email"],
             "role": user["role"],
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)
         }
+
+        # 역할별로 이름 또는 상호명 추가
+        if user["role"] == "STUDENT" and "name" in user_detail:
+            payload["name"] = user_detail["name"]
+        elif user["role"] == "BUSINESS" and "business_name" in user_detail:
+            payload["business_name"] = user_detail["business_name"]
 
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 

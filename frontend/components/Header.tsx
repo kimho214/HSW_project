@@ -14,6 +14,7 @@ export default function Header() {
   const [isMyMenuOpen, setIsMyMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("GUEST");
   const [userName, setUserName] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string>(""); // 학생: 이름, 사장: 상호명
   const [loading, setLoading] = useState(true);
 
   // 🔴 컴포넌트 마운트 시 로그인 상태 확인
@@ -29,6 +30,14 @@ export default function Header() {
         const payload = JSON.parse(atob(token.split(".")[1]));
         setUserRole(payload.role as UserRole);
         setUserName(payload.email || "사용자");
+
+        // 역할별 표시 이름 설정
+        if (payload.role === "STUDENT") {
+          setDisplayName(payload.name || "학생");
+        } else if (payload.role === "BUSINESS") {
+          setDisplayName(payload.business_name || "사업자");
+        }
+
         console.log("로그인 상태:", payload);
       } catch (error) {
         console.error("토큰 파싱 에러:", error);
@@ -44,6 +53,7 @@ export default function Header() {
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setUserRole("GUEST");
     setUserName("");
+    setDisplayName("");
     router.push("/");
     window.location.reload();
   };
@@ -85,9 +95,9 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* 1. 로고 */}
-          <div className="flex-shrink-0 flex items-center">
+        <div className="flex items-center h-16">
+          {/* 1. 로고 - 고정 너비 영역 */}
+          <div className="flex-1 flex items-center">
             <Link href="/" className="flex items-center">
               <span className="text-2xl font-bold text-blue-600">이음</span>
               <span className="ml-2 text-sm text-gray-500 hidden md:block">
@@ -96,29 +106,31 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* 2. 데스크탑 메뉴 (필터링된 메뉴만 표시) */}
-          <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-            {loading ? (
-              <span className="text-sm text-gray-500">로딩 중...</span>
-            ) : (
-              visibleNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    pathname === item.href
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))
-            )}
+          {/* 2. 데스크탑 메뉴 (필터링된 메뉴만 표시) - 중앙 정렬 */}
+          <div className="hidden sm:flex sm:flex-1 sm:justify-center">
+            <div className="flex space-x-8">
+              {loading ? (
+                <span className="text-sm text-gray-500">로딩 중...</span>
+              ) : (
+                visibleNavItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                      pathname === item.href
+                        ? "border-blue-500 text-gray-900"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
 
-          {/* 3. 로그인/회원가입 또는 사용자 정보 */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-2">
+          {/* 3. 로그인/회원가입 또는 사용자 정보 - 우측 고정 영역 */}
+          <div className="hidden sm:flex sm:flex-1 sm:justify-end sm:items-center space-x-2">
             {loading ? null : userRole === "GUEST" ? (
               <>
                 <Link
@@ -137,9 +149,9 @@ export default function Header() {
             ) : (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-700">
-                  <strong>{userRole === "STUDENT" ? "학생" : "사장님"}</strong>
+                  <strong>{userRole === "STUDENT" ? "학생" : "사장"}</strong>
                   {" | "}
-                  {userName}
+                  {displayName}
                 </span>
 
                 {/* 마이페이지 드롭다운 */}
@@ -292,9 +304,9 @@ export default function Header() {
               ) : (
                 <>
                   <div className="text-sm text-gray-700 text-center py-2">
-                    <strong>{userRole === "STUDENT" ? "학생" : "사장님"}</strong>
+                    <strong>{userRole === "STUDENT" ? "학생" : "사장"}</strong>
                     {" | "}
-                    {userName}
+                    {displayName}
                   </div>
                   <Link
                     href="/mypage"
