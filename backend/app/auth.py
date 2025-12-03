@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-auth_bp = Blueprint("auth", __name__)
+auth_bp = Blueprint("auth_bp", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -50,11 +50,11 @@ def signup():
         cursor = conn.cursor()
 
         sql_user = """
-        INSERT INTO users (email, password, role)
-        VALUES (%s, %s, %s)
+        INSERT INTO users (email, password, role) VALUES (%s, %s, %s)
+        RETURNING id
         """
         cursor.execute(sql_user, (email, hashed_pw, role))
-        user_id = cursor.lastrowid
+        user_id = cursor.fetchone()['id']
 
         if role == "STUDENT":
             sql_student = """
@@ -78,7 +78,7 @@ def signup():
         if conn:
             conn.rollback()
         # 이메일 중복 오류인지 확인
-        if "Duplicate entry" in str(e) and "for key 'users.email'" in str(e):
+        if "violates unique constraint" in str(e):
             return jsonify({"message": "Email already exists"}), 409
         return jsonify({"message": "Registration failed due to an internal error"}), 500
 
