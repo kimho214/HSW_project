@@ -66,11 +66,11 @@ def create_application():
         # 지원 등록
         sql = """
         INSERT INTO applications (project_id, student_id, cover_letter)
-        VALUES (%s, %s, %s)
+        VALUES (%s, %s, %s) RETURNING id
         """
         cursor.execute(sql, (project_id, payload["id"], cover_letter))
         conn.commit()
-        application_id = cursor.lastrowid
+        application_id = cursor.fetchone()['id']
 
         return jsonify({
             "message": "application submitted successfully",
