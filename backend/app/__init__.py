@@ -14,12 +14,13 @@ def create_app():
     app.teardown_appcontext(db.close_db)
 
     # 블루프린트 등록
-    from . import auth # 블루프린트 import를 함수 안으로 이동
-    from . import projects
-    from . import applications
-    from . import profiles # 'students.py' -> 'profiles.py' 로 수정
-    from . import ai
-    from . import messages # 'chat.py' -> 'messages.py' 로 수정
+    with app.app_context():
+        from . import auth # 블루프린트 import를 함수 안으로 이동
+        from . import projects
+        from . import applications
+        from . import profiles # 'students.py' -> 'profiles.py' 로 수정
+        from . import ai
+        from . import messages # 'chat.py' -> 'messages.py' 로 수정
 
     app.register_blueprint(auth.auth_bp, url_prefix='/auth')
     app.register_blueprint(projects.projects_bp, url_prefix='/projects')
