@@ -158,8 +158,6 @@ def login():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 
 # ============================
@@ -230,5 +228,3 @@ def change_password():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
