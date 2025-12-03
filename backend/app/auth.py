@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-auth_bp = Blueprint("auth_bp", __name__)
+auth_bp = Blueprint("auth", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
