@@ -48,16 +48,8 @@ def token_required(f):
 # ============================
 #   프로젝트 등록 API (사장님만 가능)
 # ============================
-@projects_bp.route("", methods=["POST", "OPTIONS"])
+@projects_bp.route("", methods=["POST"])
 def create_project():
-    # OPTIONS 요청은 인증 없이 통과
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        return response, 200
-
     # POST 요청은 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -193,16 +185,8 @@ def get_projects():
 # ============================
 #   내 프로젝트 목록 조회 API (사장님만 가능)
 # ============================
-@projects_bp.route("/my", methods=["GET", "OPTIONS"])
+@projects_bp.route("/my", methods=["GET"])
 def get_my_projects():
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -316,16 +300,8 @@ def get_project_detail(project_id):
 # ============================
 #   프로젝트 수정 API (작성자만 가능)
 # ============================
-@projects_bp.route("/<int:project_id>", methods=["PUT", "OPTIONS"])
+@projects_bp.route("/<int:project_id>", methods=["PUT"])
 def update_project(project_id):
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'PUT,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -401,16 +377,8 @@ def update_project(project_id):
 # ============================
 #   프로젝트 삭제 API (작성자만 가능)
 # ============================
-@projects_bp.route("/<int:project_id>", methods=["DELETE", "OPTIONS"])
+@projects_bp.route("/<int:project_id>", methods=["DELETE"])
 def delete_project(project_id):
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'DELETE,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
