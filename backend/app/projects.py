@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-projects_bp = Blueprint("projects", __name__)
+projects_bp = Blueprint("projects_bp", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
