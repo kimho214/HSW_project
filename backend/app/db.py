@@ -6,6 +6,9 @@ from psycopg2.extras import DictCursor
 
 load_dotenv()  # .env 파일 불러오기
 
+def get_db():
+    """
+    애플리케이션 컨텍스트(g)를 사용하여 현재 요청에 대한 데이터베이스 연결을 가져옵니다.
     연결이 없으면 새로 생성하고, 있으면 기존 연결을 반환합니다.
     """
     if 'db' not in g:
@@ -19,4 +22,9 @@ load_dotenv()  # .env 파일 불러오기
     return g.db
 
 def close_db(e=None):
-
+    """
+    요청이 끝날 때 데이터베이스 연결을 닫습니다.
+    """
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
