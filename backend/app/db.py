@@ -16,7 +16,8 @@ def get_db():
             user=os.getenv("DB_USER", "root"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME", "talent_match"),
-            port=int(os.getenv("DB_PORT", 3306))
+            port=int(os.getenv("DB_PORT", 3306)),
+            connection_timeout=10  # 10초 이상 응답이 없으면 연결 실패 처리
         )
     return g.db
 
