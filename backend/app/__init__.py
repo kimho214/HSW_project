@@ -21,11 +21,11 @@ def create_app():
     from . import ai
     from . import messages # 'chat.py' -> 'messages.py' 로 수정
 
-    app.register_blueprint(auth.auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(projects.projects_bp, url_prefix='/api/projects')
-    app.register_blueprint(applications.applications_bp, url_prefix='/api/applications')
-    app.register_blueprint(profiles.profiles_bp, url_prefix='/api/profiles') # 변수명 및 URL 접두사 수정
-    app.register_blueprint(ai.ai_bp, url_prefix='/api/ai')
-    app.register_blueprint(messages.messages_bp, url_prefix='/api/messages') # 변수명 및 URL 접두사 수정
+    app.register_blueprint(auth.auth_bp, url_prefix='/auth')
+    app.register_blueprint(projects.projects_bp, url_prefix='/projects')
+    app.register_blueprint(applications.applications_bp, url_prefix='/applications')
+    app.register_blueprint(profiles.profiles_bp, url_prefix='/profiles')
+    app.register_blueprint(ai.ai_bp, url_prefix='/ai')
+    app.register_blueprint(messages.messages_bp, url_prefix='/messages')
 
     return app
