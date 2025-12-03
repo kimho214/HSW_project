@@ -1,36 +1,31 @@
 from flask import Flask
 from flask_cors import CORS
-from app.auth import auth_bp
-from app.projects import projects_bp
-from app.applications import applications_bp
-from app.profiles import profiles_bp
-from app.ai import ai_bp
 import os
-from dotenv import load_dotenv
-from . import messages
-
-load_dotenv()
 
 def create_app():
     app = Flask(__name__)
 
-    # CORS 설정 (환경변수에서 허용 도메인 가져오기)
-    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    # 환경 변수에서 CORS 설정 로드
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(',')
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
 
-    CORS(
-        app,
-        resources={r"/*": {"origins": allowed_origins}},
-        supports_credentials=True,
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"]
-    )
+    # 데이터베이스 초기화 함수 등록
+    from . import db
+    app.teardown_appcontext(db.close_db)
 
-    # Blueprint 등록
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(projects_bp, url_prefix="/projects")
-    app.register_blueprint(applications_bp, url_prefix="/applications")
-    app.register_blueprint(profiles_bp, url_prefix="/profiles")
-    app.register_blueprint(messages.messages_bp, url_prefix="/messages")
-    app.register_blueprint(ai_bp, url_prefix="/ai")
+    # 블루프린트 등록
+    from . import auth
+    from . import projects
+    from . import applications
+    from . import students
+    from . import ai
+    from . import chat
+
+    app.register_blueprint(auth.auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(projects.projects_bp, url_prefix='/api/projects')
+    app.register_blueprint(applications.applications_bp, url_prefix='/api/applications')
+    app.register_blueprint(students.students_bp, url_prefix='/api/students')
+    app.register_blueprint(ai.ai_bp, url_prefix='/api/ai')
+    app.register_blueprint(chat.chat_bp, url_prefix='/api/chat')
 
     return app
