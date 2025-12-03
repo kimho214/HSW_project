@@ -48,8 +48,6 @@ def get_messages(room_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 # ==================================================
 #   채팅 메시지 저장 API (POST /messages)
@@ -90,8 +88,6 @@ def save_message():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 # ==================================================
 #   내 채팅방 목록 조회 API (GET /messages/rooms/my)
@@ -203,8 +199,6 @@ def get_my_chat_rooms():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 # ==================================================
 #   채팅방 삭제 API (DELETE /messages/rooms/<room_id>)
@@ -266,5 +260,3 @@ def delete_chat_room(room_id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
