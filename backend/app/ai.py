@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ai_bp = Blueprint("ai_bp", __name__, url_prefix="/ai")
+ai_bp = Blueprint("ai", __name__, url_prefix="/ai")
 
 # Gemini API 설정
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
