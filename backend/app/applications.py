@@ -81,7 +81,7 @@ def create_application():
         if conn:
             conn.rollback()
         # 중복 지원 체크
-        if "unique_application" in str(e).lower() or "duplicate" in str(e).lower():
+        if "violates unique constraint" in str(e):
             return jsonify({"message": "You have already applied to this project"}), 409
         return jsonify({"message": "Failed to submit application"}), 500
 
