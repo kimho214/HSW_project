@@ -47,7 +47,7 @@ def get_my_profile():
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         sql = """
         SELECT
@@ -155,7 +155,7 @@ def get_public_profiles():
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 쿼리 파라미터로 필터링
         skill = request.args.get("skill")
@@ -173,7 +173,7 @@ def get_public_profiles():
             u.email
         FROM students s
         JOIN users u ON s.user_id = u.id
-        WHERE s.is_profile_public = TRUE
+        WHERE s.is_profile_public IS TRUE
         AND s.introduction IS NOT NULL
         """
         params = []
@@ -212,7 +212,7 @@ def get_profile_by_id(user_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         sql = """
         SELECT
@@ -227,7 +227,7 @@ def get_profile_by_id(user_id):
         FROM students s
         JOIN users u ON s.user_id = u.id
         WHERE s.user_id = %s
-        AND s.is_profile_public = TRUE
+        AND s.is_profile_public IS TRUE
         """
 
         cursor.execute(sql, (user_id,))
