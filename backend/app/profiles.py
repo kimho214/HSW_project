@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-profiles_bp = Blueprint("profiles_bp", __name__)
+profiles_bp = Blueprint("profiles", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
