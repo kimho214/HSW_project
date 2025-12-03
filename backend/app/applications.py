@@ -120,7 +120,7 @@ def get_project_applications(project_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 프로젝트 소유자 확인
         cursor.execute("SELECT business_id FROM projects WHERE id = %s", (project_id,))
@@ -201,7 +201,7 @@ def get_my_applications():
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 내가 지원한 프로젝트 목록
         sql = """
@@ -279,7 +279,7 @@ def update_application_status(application_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 지원 정보 및 프로젝트 소유자 확인
         sql = """
