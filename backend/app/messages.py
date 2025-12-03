@@ -22,7 +22,7 @@ def get_messages(room_id):
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # URL-인코딩된 room_id를 디코딩하여 일관성을 보장합니다.
         decoded_room_id = unquote(room_id)
@@ -119,7 +119,7 @@ def get_my_chat_rooms():
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 내가 포함된 모든 채팅방 조회 (room_id에 내 이메일이 포함된 경우)
         sql = """
