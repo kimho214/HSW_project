@@ -135,7 +135,7 @@ def get_projects():
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 쿼리 파라미터로 필터링 (선택사항)
         status = request.args.get("status", "OPEN")  # 기본값: OPEN
@@ -212,7 +212,7 @@ def get_my_projects():
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 내가 등록한 프로젝트 목록
         sql = """
@@ -256,7 +256,7 @@ def get_project_detail(project_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         sql = """
         SELECT
@@ -319,7 +319,7 @@ def update_project(project_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 프로젝트 소유자 확인
         cursor.execute("SELECT business_id FROM projects WHERE id = %s", (project_id,))
@@ -394,7 +394,7 @@ def delete_project(project_id):
 
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # 프로젝트 소유자 확인
         cursor.execute("SELECT business_id FROM projects WHERE id = %s", (project_id,))
