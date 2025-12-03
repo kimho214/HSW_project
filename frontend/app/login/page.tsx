@@ -63,7 +63,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            로그인 (테스트 버전)
+            로그인
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             또는{" "}
@@ -128,10 +128,6 @@ export default function LoginPage() {
             >
               {loading ? "로그인 중..." : "로그인"}
             </button>
-          </div>
-
-          <div className="text-center text-sm text-gray-600">
-            <p>F12 → Console 탭을 열어서 로그를 확인하세요!</p>
           </div>
         </form>
       </div>
