@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-messages_bp = Blueprint("messages_bp", __name__, url_prefix="/messages")
+messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
