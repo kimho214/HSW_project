@@ -10,22 +10,22 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
 
     # 데이터베이스 초기화 함수 등록
-    from . import db
+    from . import db # db는 함수 밖에서 import 해도 안전합니다.
     app.teardown_appcontext(db.close_db)
 
     # 블루프린트 등록
-    from . import auth
+    from . import auth # 블루프린트 import를 함수 안으로 이동
     from . import projects
     from . import applications
-    from . import students
+    from . import profiles # 'students.py' -> 'profiles.py' 로 수정
     from . import ai
-    from . import chat
+    from . import messages # 'chat.py' -> 'messages.py' 로 수정
 
     app.register_blueprint(auth.auth_bp, url_prefix='/api/auth')
     app.register_blueprint(projects.projects_bp, url_prefix='/api/projects')
     app.register_blueprint(applications.applications_bp, url_prefix='/api/applications')
-    app.register_blueprint(students.students_bp, url_prefix='/api/students')
+    app.register_blueprint(profiles.profiles_bp, url_prefix='/api/profiles') # 변수명 및 URL 접두사 수정
     app.register_blueprint(ai.ai_bp, url_prefix='/api/ai')
-    app.register_blueprint(chat.chat_bp, url_prefix='/api/chat')
+    app.register_blueprint(messages.messages_bp, url_prefix='/api/messages') # 변수명 및 URL 접두사 수정
 
     return app
