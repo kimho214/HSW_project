@@ -16,16 +16,8 @@ if not SECRET_KEY:
 # ============================
 #   프로젝트에 지원하기 API (학생만 가능)
 # ============================
-@applications_bp.route("", methods=["POST", "OPTIONS"])
+@applications_bp.route("", methods=["POST"])
 def create_application():
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -103,16 +95,8 @@ def create_application():
 # ============================
 #   특정 프로젝트의 지원자 목록 조회 (프로젝트 작성자만 가능)
 # ============================
-@applications_bp.route("/project/<int:project_id>", methods=["GET", "OPTIONS"])
+@applications_bp.route("/project/<int:project_id>", methods=["GET"])
 def get_project_applications(project_id):
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -190,16 +174,8 @@ def get_project_applications(project_id):
 # ============================
 #   내가 지원한 프로젝트 목록 조회 (학생만 가능)
 # ============================
-@applications_bp.route("/my", methods=["GET", "OPTIONS"])
+@applications_bp.route("/my", methods=["GET"])
 def get_my_applications():
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
@@ -276,16 +252,8 @@ def get_my_applications():
 # ============================
 #   지원 상태 변경 API (프로젝트 작성자만 가능)
 # ============================
-@applications_bp.route("/<int:application_id>", methods=["PUT", "OPTIONS"])
+@applications_bp.route("/<int:application_id>", methods=["PUT"])
 def update_application_status(application_id):
-    # OPTIONS 요청 처리
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'PUT,OPTIONS')
-        return response, 200
-
     # 토큰 검증
     token = None
     auth_header = request.headers.get('Authorization')
