@@ -7,7 +7,7 @@ def create_app():
 
     # 환경 변수에서 CORS 설정 로드
     allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(',')
-    CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": allowed_origins}}, supports_credentials=True)
 
     # 데이터베이스 초기화 함수 등록
     from . import db # db는 함수 밖에서 import 해도 안전합니다.
