@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
 from urllib.parse import unquote
-import jwt
+from app.projects import token_required
 import os
 from dotenv import load_dotenv
 
@@ -93,28 +93,9 @@ def save_message():
 #   내 채팅방 목록 조회 API (GET /messages/rooms/my)
 # ==================================================
 @messages_bp.route("/rooms/my", methods=["GET"])
+@token_required
 def get_my_chat_rooms():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        my_email = payload.get("email")
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
+    my_email = request.user.get("email")
     conn = None
     cursor = None
     try:
@@ -204,28 +185,9 @@ def get_my_chat_rooms():
 #   채팅방 삭제 API (DELETE /messages/rooms/<room_id>)
 # ==================================================
 @messages_bp.route("/rooms/<string:room_id>", methods=["DELETE"])
+@token_required
 def delete_chat_room(room_id):
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        my_email = payload.get("email")
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
+    my_email = request.user.get("email")
     conn = None
     cursor = None
 
