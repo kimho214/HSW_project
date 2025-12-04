@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-import jwt
+from app.projects import token_required
 import os
 from dotenv import load_dotenv
 
@@ -17,29 +17,10 @@ if not SECRET_KEY:
 #   내 프로필 조회 API (학생만 가능)
 # ============================
 @profiles_bp.route("/my", methods=["GET"])
+@token_required
 def get_my_profile():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 학생만 조회 가능
-    if payload.get("role") != "STUDENT":
+    if request.user.get("role") != "STUDENT":
         return jsonify({"message": "only students can view profiles"}), 403
 
     conn = None
@@ -57,7 +38,7 @@ def get_my_profile():
         JOIN users u ON s.user_id = u.id
         WHERE s.user_id = %s
         """
-        cursor.execute(sql, (payload["id"],))
+        cursor.execute(sql, (request.user["id"],))
         profile = cursor.fetchone()
 
         if not profile:
@@ -86,29 +67,10 @@ def get_my_profile():
 #   프로필 등록/수정 API (학생만 가능)
 # ============================
 @profiles_bp.route("/my", methods=["PUT"])
+@token_required
 def update_my_profile():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 학생만 수정 가능
-    if payload.get("role") != "STUDENT":
+    if request.user.get("role") != "STUDENT":
         return jsonify({"message": "only students can update profiles"}), 403
 
     data = request.get_json()
@@ -133,7 +95,7 @@ def update_my_profile():
         if not update_fields:
             return jsonify({"message": "no fields to update"}), 400
 
-        params.append(payload["id"])
+        params.append(request.user["id"])
         sql = f"UPDATE students SET {', '.join(update_fields)} WHERE user_id = %s"
 
         cursor.execute(sql, params)
@@ -203,6 +165,14 @@ def get_public_profiles():
             # NULL 값을 안전한 빈 문자열로 변환
             if 'skills' in profile and profile['skills'] is None:
                 profile['skills'] = ""
+            if 'introduction' in profile and profile['introduction'] is None:
+                profile['introduction'] = ""
+            if 'portfolio_url' in profile and profile['portfolio_url'] is None:
+                profile['portfolio_url'] = ""
+            if 'github_url' in profile and profile['github_url'] is None:
+                profile['github_url'] = ""
+            if 'linkedin_url' in profile and profile['linkedin_url'] is None:
+                profile['linkedin_url'] = ""
 
         return jsonify({
             "message": "success",
