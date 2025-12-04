@@ -171,8 +171,12 @@ def get_projects():
             if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
                 project['updated_at'] = project['updated_at'].isoformat()
             # NULL 값을 안전한 빈 문자열로 변환
-            if project['location'] is None:
+            if 'location' in project and project['location'] is None:
                 project['location'] = ""
+            if 'salary' in project and project['salary'] is None:
+                project['salary'] = ""
+            if 'duration' in project and project['duration'] is None:
+                project['duration'] = ""
             if 'required_skills' in project and project['required_skills'] is None:
                 project['required_skills'] = ""
 
