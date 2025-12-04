@@ -1,224 +1,247 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-from urllib.parse import unquote
 from app.projects import token_required
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
+applications_bp = Blueprint("applications", __name__)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY must be set in environment variables")
 
-# ==================================================
-#   특정 채팅방의 모든 메시지 조회 API (GET /messages/<room_id>)
-# ==================================================
-@messages_bp.route("/<string:room_id>", methods=["GET"])
-def get_messages(room_id):
-    conn = None
-    cursor = None
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
 
-        # URL-인코딩된 room_id를 디코딩하여 일관성을 보장합니다.
-        decoded_room_id = unquote(room_id)
+# ============================
+#   프로젝트에 지원하기 API (학생만 가능)
+# ============================
+@applications_bp.route("", methods=["POST"])
+@token_required
+def create_application():
+    # 학생만 지원 가능
+    if request.user.get("role") != "STUDENT":
+        return jsonify({"message": "only students can apply to projects"}), 403
 
-        # 🔴 디버깅 로그 1: 어떤 room_id로 조회를 요청받았는지 확인
-        print(f"[DEBUG-FLASK] GET /messages: 조회 요청된 room_id = '{decoded_room_id}'")
-
-        # DB에서 room_id가 일치하는 모든 메시지를 시간순으로 정렬하여 가져옵니다.
-        sql = "SELECT room_id, sender, message, created_at FROM messages WHERE room_id = %s ORDER BY created_at ASC"
-        cursor.execute(sql, (decoded_room_id,))
-        messages = cursor.fetchall()
-        
-        # 중요: DB에서 가져온 datetime 객체를 JSON으로 변환할 수 있도록 문자열로 직접 변환합니다.
-        for message in messages:
-            if 'created_at' in message and hasattr(message['created_at'], 'isoformat'):
-                message['created_at'] = message['created_at'].isoformat()
-
-        return jsonify({"messages": messages}), 200
-
-    except Exception as e:
-        print(f"Error fetching messages: {e}")
-        return jsonify({"message": "Failed to fetch messages"}), 500
-    finally:
-        if cursor:
-            cursor.close()
-
-# ==================================================
-#   채팅 메시지 저장 API (POST /messages)
-# ==================================================
-@messages_bp.route("", methods=["POST"])
-def save_message():
     data = request.get_json()
-    room_id = data.get("room_id")
-    message = data.get("message")
-    sender = data.get("sender")
+    project_id = data.get("project_id")
+    cover_letter = data.get("cover_letter", "")
 
-    # POST 요청으로 받은 room_id도 디코딩하여 일관성을 보장합니다.
-    decoded_room_id = unquote(room_id) if room_id else None
-
-    # 🔴 디버깅 로그 2: 어떤 데이터로 저장을 요청받았는지 확인
-    print(f"[DEBUG-FLASK] POST /messages: 저장 요청된 데이터 = room_id: '{decoded_room_id}', sender: '{sender}', message: '{message}'")
-
-    if not all([decoded_room_id, message, sender]):
-        return jsonify({"message": "Missing required fields"}), 400
+    if not project_id:
+        return jsonify({"message": "project_id is required"}), 400
 
     conn = None
     cursor = None
+
     try:
         conn = get_db()
         cursor = conn.cursor()
-        
-        sql = "INSERT INTO messages (room_id, sender, message) VALUES (%s, %s, %s)"
-        cursor.execute(sql, (decoded_room_id, sender, message))
+
+        # 프로젝트 존재 여부 확인
+        cursor.execute("SELECT id FROM projects WHERE id = %s AND status = 'OPEN'", (project_id,))
+        project = cursor.fetchone()
+
+        if not project:
+            return jsonify({"message": "project not found or not open"}), 404
+
+        # 지원 등록
+        sql = """
+        INSERT INTO applications (project_id, student_id, cover_letter)
+        VALUES (%s, %s, %s) RETURNING id
+        """
+        cursor.execute(sql, (project_id, request.user["id"], cover_letter))
         conn.commit()
-        
-        return jsonify({"message": "Message saved successfully"}), 201
+        application_id = cursor.fetchone()['id']
+
+        return jsonify({
+            "message": "application submitted successfully",
+            "application_id": application_id
+        }), 201
 
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f"Error saving message: {e}")
-        return jsonify({"message": "Failed to save message"}), 500
+        # 중복 지원 체크
+        if "violates unique constraint" in str(e):
+            return jsonify({"message": "You have already applied to this project"}), 409
+        return jsonify({"message": "Failed to submit application"}), 500
+
     finally:
         if cursor:
             cursor.close()
 
-# ==================================================
-#   내 채팅방 목록 조회 API (GET /messages/rooms/my)
-# ==================================================
-@messages_bp.route("/rooms/my", methods=["GET"])
+
+# ============================
+#   특정 프로젝트의 지원자 목록 조회 (프로젝트 작성자만 가능)
+# ============================
+@applications_bp.route("/project/<int:project_id>", methods=["GET"])
 @token_required
-def get_my_chat_rooms():
-    my_email = request.user.get("email")
+def get_project_applications(project_id):
     conn = None
     cursor = None
+
     try:
         conn = get_db()
         cursor = conn.cursor()
 
-        # 내가 포함된 모든 채팅방 조회 (room_id에 내 이메일이 포함된 경우)
+        # 프로젝트 소유자 확인
+        cursor.execute("SELECT business_id FROM projects WHERE id = %s", (project_id,))
+        project = cursor.fetchone()
+
+        if not project:
+            return jsonify({"message": "project not found"}), 404
+
+        if project["business_id"] != request.user["id"]:
+            return jsonify({"message": "unauthorized"}), 403
+
+        # 지원자 목록 조회
         sql = """
         SELECT
-            room_id,
-            sender,
-            message,
-            created_at
-        FROM messages
-        WHERE room_id LIKE %s
-        ORDER BY created_at DESC
+            a.*,
+            s.name as student_name,
+            u.email as student_email
+        FROM applications a
+        JOIN users u ON a.student_id = u.id
+        JOIN students s ON u.id = s.user_id
+        WHERE a.project_id = %s
+        ORDER BY a.created_at DESC
         """
-        cursor.execute(sql, (f"%{my_email}%",))
-        all_messages = cursor.fetchall()
+        cursor.execute(sql, (project_id,))
+        applications = cursor.fetchall()
 
-        # 채팅방별로 그룹화하고 마지막 메시지만 추출
-        rooms_dict = {}
-        for msg in all_messages:
-            room_id = msg['room_id']
-            if room_id not in rooms_dict:
-                # room_id에서 상대방 이메일 추출
-                parts = room_id.split('_')
-                opponent_email = parts[0] if parts[0] != my_email else (parts[1] if len(parts) > 1 else '')
-
-                # 상대방 이름 조회
-                opponent_name = opponent_email
-                try:
-                    # 학생인지 확인
-                    cursor.execute("""
-                        SELECT s.name
-                        FROM students s
-                        JOIN users u ON s.user_id = u.id
-                        WHERE u.email = %s
-                    """, (opponent_email,))
-                    student = cursor.fetchone()
-                    if student:
-                        opponent_name = student['name']
-                    else:
-                        # 사업자인지 확인
-                        cursor.execute("""
-                            SELECT b.business_name
-                            FROM businesses b
-                            JOIN users u ON b.user_id = u.id
-                            WHERE u.email = %s
-                        """, (opponent_email,))
-                        business = cursor.fetchone()
-                        if business:
-                            opponent_name = business['business_name']
-                except:
-                    pass
-
-                rooms_dict[room_id] = {
-                    'room_id': room_id,
-                    'opponent_email': opponent_email,
-                    'opponent_name': opponent_name,
-                    'last_message': msg['message'],
-                    'last_sender': msg['sender'],
-                    'last_message_time': msg['created_at'].isoformat() if hasattr(msg['created_at'], 'isoformat') else str(msg['created_at']),
-                    'unread': msg['sender'] != my_email  # 간단한 미읽음 표시 (마지막 메시지가 상대방이 보낸 것이면)
-                }
-
-        # 리스트로 변환
-        rooms_list = list(rooms_dict.values())
-
-        # 마지막 메시지 시간 기준으로 정렬
-        rooms_list.sort(key=lambda x: x['last_message_time'], reverse=True)
+        # 날짜 형식 변환 (JSON 직렬화 오류 방지)
+        for app in applications:
+            if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
+                app['created_at'] = app['created_at'].isoformat()
+            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
+                app['updated_at'] = app['updated_at'].isoformat()
 
         return jsonify({
             "message": "success",
-            "rooms": rooms_list,
-            "count": len(rooms_list)
+            "count": len(applications),
+            "applications": applications
         }), 200
 
     except Exception as e:
-        print(f"Error fetching chat rooms: {e}")
-        return jsonify({"message": "Failed to fetch chat rooms"}), 500
+        print(f"Error fetching my applications: {e}") # 디버깅을 위한 로그 추가
+        return jsonify({"message": "Failed to fetch applications"}), 500
+
     finally:
         if cursor:
             cursor.close()
 
-# ==================================================
-#   채팅방 삭제 API (DELETE /messages/rooms/<room_id>)
-# ==================================================
-@messages_bp.route("/rooms/<string:room_id>", methods=["DELETE"])
+
+# ============================
+#   내가 지원한 프로젝트 목록 조회 (학생만 가능)
+# ============================
+@applications_bp.route("/my", methods=["GET"])
 @token_required
-def delete_chat_room(room_id):
-    my_email = request.user.get("email")
+def get_my_applications():
+    # 학생만 조회 가능
+    if request.user.get("role") != "STUDENT":
+        return jsonify({"message": "only students can view their applications"}), 403
+
     conn = None
     cursor = None
 
     try:
-        # URL 디코딩
-        decoded_room_id = unquote(room_id)
-
-        # room_id에 내 이메일이 포함되어 있는지 확인 (권한 체크)
-        if my_email not in decoded_room_id:
-            return jsonify({"message": "unauthorized to delete this chat room"}), 403
-
         conn = get_db()
         cursor = conn.cursor()
 
-        # 해당 채팅방의 모든 메시지 삭제
-        sql = "DELETE FROM messages WHERE room_id = %s"
-        cursor.execute(sql, (decoded_room_id,))
-        deleted_count = cursor.rowcount
+        # 내가 지원한 프로젝트 목록
+        sql = """
+        SELECT
+            a.*,
+            p.title as project_title,
+            p.description as project_description,
+            p.salary,
+            p.location,
+            b.business_name,
+            u.email as business_id
+        FROM applications a
+        JOIN projects p ON a.project_id = p.id
+        LEFT JOIN users u ON p.business_id = u.id
+        LEFT JOIN businesses b ON u.id = b.user_id
+        WHERE a.student_id = %s
+        ORDER BY a.created_at DESC
+        """
+        cursor.execute(sql, (request.user["id"],))
+        applications = cursor.fetchall()
 
-        conn.commit()
+        # 날짜 형식 변환 (JSON 직렬화 오류 방지)
+        for app in applications:
+            if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
+                app['created_at'] = app['created_at'].isoformat()
+            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
+                app['updated_at'] = app['updated_at'].isoformat()
+            # NULL 값을 안전한 빈 문자열로 변환
+            if 'cover_letter' in app and app['cover_letter'] is None:
+                app['cover_letter'] = ""
 
         return jsonify({
-            "message": "chat room deleted successfully",
-            "deleted_messages": deleted_count
+            "message": "success",
+            "count": len(applications),
+            "applications": applications
         }), 200
+
+    except Exception as e:
+        print(f"Error fetching my applications: {e}") # 디버깅을 위한 로그 추가
+        return jsonify({"message": "Failed to fetch applications"}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+# ============================
+#   지원 상태 변경 API (프로젝트 작성자만 가능)
+# ============================
+@applications_bp.route("/<int:application_id>", methods=["PUT"])
+@token_required
+def update_application_status(application_id):
+    data = request.get_json()
+    new_status = data.get("status")
+
+    if new_status not in ["PENDING", "ACCEPTED", "REJECTED"]:
+        return jsonify({"message": "invalid status"}), 400
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 지원 정보 및 프로젝트 소유자 확인
+        sql = """
+        SELECT a.*, p.business_id
+        FROM applications a
+        JOIN projects p ON a.project_id = p.id
+        WHERE a.id = %s
+        """
+        cursor.execute(sql, (application_id,))
+        application = cursor.fetchone()
+
+        if not application:
+            return jsonify({"message": "application not found"}), 404
+
+        if application["business_id"] != request.user["id"]:
+            return jsonify({"message": "unauthorized"}), 403
+
+        # 상태 업데이트
+        cursor.execute(
+            "UPDATE applications SET status = %s WHERE id = %s",
+            (new_status, application_id)
+        )
+        conn.commit()
+
+        return jsonify({"message": "application status updated successfully"}), 200
 
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f"Error deleting chat room: {e}")
-        return jsonify({"message": "Failed to delete chat room"}), 500
+        return jsonify({"message": "Failed to update application status"}), 500
+
     finally:
         if cursor:
             cursor.close()
