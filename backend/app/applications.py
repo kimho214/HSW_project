@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-import jwt
+from app.projects import token_required
 import os
 from dotenv import load_dotenv
 
@@ -17,29 +17,10 @@ if not SECRET_KEY:
 #   프로젝트에 지원하기 API (학생만 가능)
 # ============================
 @applications_bp.route("", methods=["POST"])
+@token_required
 def create_application():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 학생만 지원 가능
-    if payload.get("role") != "STUDENT":
+    if request.user.get("role") != "STUDENT":
         return jsonify({"message": "only students can apply to projects"}), 403
 
     data = request.get_json()
@@ -68,7 +49,7 @@ def create_application():
         INSERT INTO applications (project_id, student_id, cover_letter)
         VALUES (%s, %s, %s) RETURNING id
         """
-        cursor.execute(sql, (project_id, payload["id"], cover_letter))
+        cursor.execute(sql, (project_id, request.user["id"], cover_letter))
         conn.commit()
         application_id = cursor.fetchone()['id']
 
@@ -94,27 +75,8 @@ def create_application():
 #   특정 프로젝트의 지원자 목록 조회 (프로젝트 작성자만 가능)
 # ============================
 @applications_bp.route("/project/<int:project_id>", methods=["GET"])
+@token_required
 def get_project_applications(project_id):
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     conn = None
     cursor = None
 
@@ -129,7 +91,7 @@ def get_project_applications(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        if project["business_id"] != payload["id"]:
+        if project["business_id"] != request.user["id"]:
             return jsonify({"message": "unauthorized"}), 403
 
         # 지원자 목록 조회
@@ -173,29 +135,10 @@ def get_project_applications(project_id):
 #   내가 지원한 프로젝트 목록 조회 (학생만 가능)
 # ============================
 @applications_bp.route("/my", methods=["GET"])
+@token_required
 def get_my_applications():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 학생만 조회 가능
-    if payload.get("role") != "STUDENT":
+    if request.user.get("role") != "STUDENT":
         return jsonify({"message": "only students can view their applications"}), 403
 
     conn = None
@@ -222,7 +165,7 @@ def get_my_applications():
         WHERE a.student_id = %s
         ORDER BY a.created_at DESC
         """
-        cursor.execute(sql, (payload["id"],))
+        cursor.execute(sql, (request.user["id"],))
         applications = cursor.fetchall()
 
         # 날짜 형식 변환 (JSON 직렬화 오류 방지)
@@ -231,6 +174,9 @@ def get_my_applications():
                 app['created_at'] = app['created_at'].isoformat()
             if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
                 app['updated_at'] = app['updated_at'].isoformat()
+            # NULL 값을 안전한 빈 문자열로 변환
+            if 'cover_letter' in app and app['cover_letter'] is None:
+                app['cover_letter'] = ""
 
         return jsonify({
             "message": "success",
@@ -251,27 +197,8 @@ def get_my_applications():
 #   지원 상태 변경 API (프로젝트 작성자만 가능)
 # ============================
 @applications_bp.route("/<int:application_id>", methods=["PUT"])
+@token_required
 def update_application_status(application_id):
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     data = request.get_json()
     new_status = data.get("status")
 
@@ -298,7 +225,7 @@ def update_application_status(application_id):
         if not application:
             return jsonify({"message": "application not found"}), 404
 
-        if application["business_id"] != payload["id"]:
+        if application["business_id"] != request.user["id"]:
             return jsonify({"message": "unauthorized"}), 403
 
         # 상태 업데이트
