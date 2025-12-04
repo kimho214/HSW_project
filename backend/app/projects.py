@@ -233,7 +233,7 @@ def get_my_projects():
         JOIN businesses b ON u.id = b.user_id
         LEFT JOIN applications a ON p.id = a.project_id
         WHERE p.business_id = %s
-        GROUP BY p.id, b.business_name, b.address
+        GROUP BY p.id, b.business_name, b.address, p.title, p.description, p.location, p.salary, p.duration, p.required_skills, p.status, p.created_at, p.updated_at
         ORDER BY p.created_at DESC
         """
         cursor.execute(sql, (payload["id"],))
