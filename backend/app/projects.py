@@ -290,6 +290,12 @@ def get_project_detail(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
+        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
+        if 'created_at' in project and hasattr(project['created_at'], 'isoformat'):
+            project['created_at'] = project['created_at'].isoformat()
+        if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
+            project['updated_at'] = project['updated_at'].isoformat()
+
         return jsonify({
             "message": "success",
             "project": project
