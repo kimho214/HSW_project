@@ -49,29 +49,10 @@ def token_required(f):
 #   프로젝트 등록 API (사장님만 가능)
 # ============================
 @projects_bp.route("", methods=["POST"])
+@token_required
 def create_project():
-    # POST 요청은 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 사장님만 프로젝트 등록 가능
-    if payload.get("role") != "BUSINESS":
+    if request.user.get("role") != "BUSINESS":
         return jsonify({"message": "only business users can create projects"}), 403
 
     data = request.get_json()
@@ -98,7 +79,7 @@ def create_project():
         VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
         """
         cursor.execute(sql, (
-            payload["id"],
+            request.user["id"],
             title,
             description,
             location,
@@ -171,14 +152,14 @@ def get_projects():
             if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
                 project['updated_at'] = project['updated_at'].isoformat()
             # NULL 값을 안전한 빈 문자열로 변환
-            if 'location' in project and project['location'] is None:
+            if project['location'] is None:
                 project['location'] = ""
+            if 'required_skills' in project and project['required_skills'] is None:
+                project['required_skills'] = ""
             if 'salary' in project and project['salary'] is None:
                 project['salary'] = ""
             if 'duration' in project and project['duration'] is None:
                 project['duration'] = ""
-            if 'required_skills' in project and project['required_skills'] is None:
-                project['required_skills'] = ""
 
 
         return jsonify({
@@ -199,29 +180,10 @@ def get_projects():
 #   내 프로젝트 목록 조회 API (사장님만 가능)
 # ============================
 @projects_bp.route("/my", methods=["GET"])
+@token_required
 def get_my_projects():
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     # 사장님만 조회 가능
-    if payload.get("role") != "BUSINESS":
+    if request.user.get("role") != "BUSINESS":
         return jsonify({"message": "only business users can view their projects"}), 403
 
     conn = None
@@ -243,9 +205,9 @@ def get_my_projects():
         JOIN businesses b ON u.id = b.user_id
         LEFT JOIN applications a ON p.id = a.project_id
         WHERE p.business_id = %s
-        GROUP BY p.id, b.business_name, b.address
+        GROUP BY p.id, b.business_name, b.address, p.title, p.description, p.location, p.salary, p.duration, p.required_skills, p.status, p.created_at, p.updated_at
         """
-        cursor.execute(sql, (payload["id"],))
+        cursor.execute(sql, (request.user["id"],))
         projects = cursor.fetchall()
 
         # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
@@ -341,27 +303,8 @@ def get_project_detail(project_id):
 #   프로젝트 수정 API (작성자만 가능)
 # ============================
 @projects_bp.route("/<int:project_id>", methods=["PUT"])
+@token_required
 def update_project(project_id):
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     conn = None
     cursor = None
 
@@ -376,7 +319,7 @@ def update_project(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        if project["business_id"] != payload["id"]:
+        if project["business_id"] != request.user["id"]:
             return jsonify({"message": "unauthorized"}), 403
 
         data = request.get_json()
@@ -416,27 +359,8 @@ def update_project(project_id):
 #   프로젝트 삭제 API (작성자만 가능)
 # ============================
 @projects_bp.route("/<int:project_id>", methods=["DELETE"])
+@token_required
 def delete_project(project_id):
-    # 토큰 검증
-    token = None
-    auth_header = request.headers.get('Authorization')
-
-    if auth_header:
-        try:
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            return jsonify({"message": "invalid token format"}), 401
-
-    if not token:
-        return jsonify({"message": "token is missing"}), 401
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "invalid token"}), 401
-
     conn = None
     cursor = None
 
@@ -451,7 +375,7 @@ def delete_project(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        if project["business_id"] != payload["id"]:
+        if project["business_id"] != request.user["id"]:
             return jsonify({"message": "unauthorized"}), 403
 
         cursor.execute("DELETE FROM projects WHERE id = %s", (project_id,))
