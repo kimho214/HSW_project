@@ -173,6 +173,8 @@ def get_projects():
             # NULL 값을 안전한 빈 문자열로 변환
             if project['location'] is None:
                 project['location'] = ""
+            if 'required_skills' in project and project['required_skills'] is None:
+                project['required_skills'] = ""
 
 
         return jsonify({
@@ -248,6 +250,15 @@ def get_my_projects():
                 project['created_at'] = project['created_at'].isoformat()
             if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
                 project['updated_at'] = project['updated_at'].isoformat()
+            # NULL 값을 안전한 빈 문자열로 변환
+            if 'location' in project and project['location'] is None:
+                project['location'] = ""
+            if 'salary' in project and project['salary'] is None:
+                project['salary'] = ""
+            if 'duration' in project and project['duration'] is None:
+                project['duration'] = ""
+            if 'required_skills' in project and project['required_skills'] is None:
+                project['required_skills'] = ""
 
         return jsonify({
             "message": "success",
@@ -298,6 +309,16 @@ def get_project_detail(project_id):
             project['created_at'] = project['created_at'].isoformat()
         if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
             project['updated_at'] = project['updated_at'].isoformat()
+
+        # NULL 값을 안전한 빈 문자열로 변환
+        if 'location' in project and project['location'] is None:
+            project['location'] = ""
+        if 'salary' in project and project['salary'] is None:
+            project['salary'] = ""
+        if 'duration' in project and project['duration'] is None:
+            project['duration'] = ""
+        if 'required_skills' in project and project['required_skills'] is None:
+            project['required_skills'] = ""
 
         return jsonify({
             "message": "success",
