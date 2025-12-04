@@ -200,6 +200,9 @@ def get_public_profiles():
                 profile['created_at'] = profile['created_at'].isoformat()
             if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
                 profile['updated_at'] = profile['updated_at'].isoformat()
+            # NULL 값을 안전한 빈 문자열로 변환
+            if 'skills' in profile and profile['skills'] is None:
+                profile['skills'] = ""
 
         return jsonify({
             "message": "success",
