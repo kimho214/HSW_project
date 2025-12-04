@@ -216,14 +216,8 @@ def get_profile_by_id(user_id):
 
         sql = """
         SELECT
-            s.user_id as id,
-            s.name as username,
-            s.introduction,
-            s.skills,
-            s.portfolio_url,
-            s.github_url,
-            s.linkedin_url,
-            u.email
+            s.*,
+            u.email as user_email
         FROM students s
         JOIN users u ON s.user_id = u.id
         WHERE s.user_id = %s
