@@ -170,6 +170,10 @@ def get_projects():
                 project['created_at'] = project['created_at'].isoformat()
             if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
                 project['updated_at'] = project['updated_at'].isoformat()
+            # NULL 값을 안전한 빈 문자열로 변환
+            if project['location'] is None:
+                project['location'] = ""
+
 
         return jsonify({
             "message": "success",
@@ -233,8 +237,7 @@ def get_my_projects():
         JOIN businesses b ON u.id = b.user_id
         LEFT JOIN applications a ON p.id = a.project_id
         WHERE p.business_id = %s
-        GROUP BY p.id, b.business_name, b.address, p.title, p.description, p.location, p.salary, p.duration, p.required_skills, p.status, p.created_at, p.updated_at
-        ORDER BY p.created_at DESC
+        GROUP BY p.id, b.business_name, b.address
         """
         cursor.execute(sql, (payload["id"],))
         projects = cursor.fetchall()
