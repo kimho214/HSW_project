@@ -151,6 +151,8 @@ def get_project_applications(project_id):
         for app in applications:
             if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
                 app['created_at'] = app['created_at'].isoformat()
+            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
+                app['updated_at'] = app['updated_at'].isoformat()
 
         return jsonify({
             "message": "success",
@@ -227,6 +229,8 @@ def get_my_applications():
         for app in applications:
             if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
                 app['created_at'] = app['created_at'].isoformat()
+            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
+                app['updated_at'] = app['updated_at'].isoformat()
 
         return jsonify({
             "message": "success",
