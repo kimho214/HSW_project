@@ -63,6 +63,12 @@ def get_my_profile():
         if not profile:
             return jsonify({"message": "profile not found"}), 404
 
+        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
+        if 'created_at' in profile and hasattr(profile['created_at'], 'isoformat'):
+            profile['created_at'] = profile['created_at'].isoformat()
+        if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
+            profile['updated_at'] = profile['updated_at'].isoformat()
+
         return jsonify({
             "message": "success",
             "profile": profile
@@ -187,6 +193,13 @@ def get_public_profiles():
 
         cursor.execute(sql, params)
         profiles = cursor.fetchall()
+
+        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
+        for profile in profiles:
+            if 'created_at' in profile and hasattr(profile['created_at'], 'isoformat'):
+                profile['created_at'] = profile['created_at'].isoformat()
+            if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
+                profile['updated_at'] = profile['updated_at'].isoformat()
 
         return jsonify({
             "message": "success",
