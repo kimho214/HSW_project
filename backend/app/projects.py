@@ -190,10 +190,11 @@ def get_my_projects():
 @projects_bp.route("/<int:project_id>", methods=["GET"])
 def get_project_detail(project_id):
     conn = None
+    from psycopg2.extras import DictCursor # DictCursor를 임포트합니다.
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=DictCursor) # DictCursor를 사용하도록 명시합니다.
 
         sql = """
         SELECT
