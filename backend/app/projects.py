@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.db import get_db
 import os
 from .auth import token_required # auth.py에서 데코레이터 가져오기
-from .utils import format_records, db_transaction # 데이터 포맷팅 및 DB 트랜잭션 유틸리티 가져오기
+from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 import traceback # traceback 모듈 임포트
 from dotenv import load_dotenv
 
@@ -189,9 +189,13 @@ def get_my_projects():
 # ============================
 @projects_bp.route("/<int:project_id>", methods=["GET"])
 def get_project_detail(project_id):
+    conn = None
+    cursor = None
     try:
-        with db_transaction() as cursor:
-            sql = """
+        conn = get_db()
+        cursor = conn.cursor()
+
+        sql = """
         SELECT
             p.*,
             b.business_name,
@@ -202,24 +206,28 @@ def get_project_detail(project_id):
         LEFT JOIN businesses b ON u.id = b.user_id
         WHERE p.id = %s
         """
-            cursor.execute(sql, (project_id,))
-            project = cursor.fetchone()
+        cursor.execute(sql, (project_id,))
+        project = cursor.fetchone()
 
-            if not project:
-                return jsonify({"message": "project not found"}), 404
+        if not project:
+            return jsonify({"message": "project not found"}), 404
 
-            # 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
-            formatted_project = format_records(project)
+        # 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
+        formatted_project = format_records(project)
 
-            return jsonify({
-                "message": "success",
-                "project": formatted_project
-            }), 200
+        return jsonify({
+            "message": "success",
+            "project": formatted_project
+        }), 200
 
     except Exception as e:
         print(f"Error in get_project_detail for project_id {project_id}: {e}") # 에러 메시지 출력
         traceback.print_exc() # 전체 스택 트레이스 출력
         return jsonify({"message": "Failed to fetch project details"}), 500
+    
+    finally:
+        if cursor:
+            cursor.close()
 
 
 # ============================
