@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.db import get_db
 import os
 from .auth import token_required # auth.py에서 데코레이터 가져오기
-from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
+from .utils import format_records, db_transaction # 데이터 포맷팅 및 DB 트랜잭션 유틸리티 가져오기
 import traceback # traceback 모듈 임포트
 from dotenv import load_dotenv
 
