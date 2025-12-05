@@ -150,7 +150,9 @@ export default function ProjectDetailPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {project.title}
             </h1>
-            <p className="text-lg text-gray-600">{project.business_name}</p>
+            <p className="text-lg text-gray-600">
+              {project.business_name || "회사명 미정"}
+            </p>
           </div>
           <span
             className={`px-4 py-2 rounded-full text-sm font-semibold ${
@@ -220,10 +222,12 @@ export default function ProjectDetailPage() {
             업체 정보
           </h2>
           <p className="text-gray-700">
-            <span className="font-medium">주소:</span> {project.business_address}
+            <span className="font-medium">주소:</span>{" "}
+            {project.business_address || "주소 정보 없음"}
           </p>
           <p className="text-gray-700">
-            <span className="font-medium">연락처:</span> {project.business_email}
+            <span className="font-medium">연락처:</span>{" "}
+            {project.business_email || "연락처 정보 없음"}
           </p>
         </div>
       </div>
