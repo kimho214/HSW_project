@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-from app.projects import token_required
+from .auth import token_required # auth.py에서 데코레이터 가져오기
+from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 import os
 from dotenv import load_dotenv
 
@@ -44,15 +45,10 @@ def get_my_profile():
         if not profile:
             return jsonify({"message": "profile not found"}), 404
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        if 'created_at' in profile and hasattr(profile['created_at'], 'isoformat'):
-            profile['created_at'] = profile['created_at'].isoformat()
-        if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
-            profile['updated_at'] = profile['updated_at'].isoformat()
-
+        formatted_profile = format_records(profile)
         return jsonify({
             "message": "success",
-            "profile": profile
+            "profile": formatted_profile
         }), 200
 
     except Exception as e:
@@ -156,28 +152,11 @@ def get_public_profiles():
         cursor.execute(sql, params)
         profiles = cursor.fetchall()
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        for profile in profiles:
-            if 'created_at' in profile and hasattr(profile['created_at'], 'isoformat'):
-                profile['created_at'] = profile['created_at'].isoformat()
-            if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
-                profile['updated_at'] = profile['updated_at'].isoformat()
-            # NULL 값을 안전한 빈 문자열로 변환
-            if 'skills' in profile and profile['skills'] is None:
-                profile['skills'] = ""
-            if 'introduction' in profile and profile['introduction'] is None:
-                profile['introduction'] = ""
-            if 'portfolio_url' in profile and profile['portfolio_url'] is None:
-                profile['portfolio_url'] = ""
-            if 'github_url' in profile and profile['github_url'] is None:
-                profile['github_url'] = ""
-            if 'linkedin_url' in profile and profile['linkedin_url'] is None:
-                profile['linkedin_url'] = ""
-
+        formatted_profiles = format_records(profiles)
         return jsonify({
             "message": "success",
-            "count": len(profiles),
-            "profiles": profiles
+            "count": len(formatted_profiles),
+            "profiles": formatted_profiles
         }), 200
 
     except Exception as e:
@@ -216,15 +195,10 @@ def get_profile_by_id(user_id):
         if not profile:
             return jsonify({"message": "profile not found"}), 404
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        if 'created_at' in profile and hasattr(profile['created_at'], 'isoformat'):
-            profile['created_at'] = profile['created_at'].isoformat()
-        if 'updated_at' in profile and hasattr(profile['updated_at'], 'isoformat'):
-            profile['updated_at'] = profile['updated_at'].isoformat()
-
+        formatted_profile = format_records(profile)
         return jsonify({
             "message": "success",
-            "profile": profile
+            "profile": formatted_profile
         }), 200
 
     except Exception as e:
