@@ -157,7 +157,7 @@ def get_my_applications():
             p.salary,
             p.location,
             b.business_name,
-            u.email as business_id
+            u.email as business_email
         FROM applications a
         JOIN projects p ON a.project_id = p.id
         LEFT JOIN users u ON p.business_id = u.id
