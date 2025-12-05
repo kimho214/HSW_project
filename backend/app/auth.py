@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.db import get_db
+from functools import wraps
 import jwt
 import datetime
 import os
@@ -13,6 +14,36 @@ auth_bp = Blueprint("auth", __name__)
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY must be set in environment variables")
+
+
+# ============================
+#   JWT 토큰 검증 데코레이터
+# ============================
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+
+        if auth_header and auth_header.startswith("Bearer "):
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({"message": "Invalid token format. It must be 'Bearer <token>'"}), 401
+
+        if not token:
+            return jsonify({"message": "Authentication token is missing"}), 401
+
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            request.user = payload  # 요청 객체에 사용자 정보 추가
+        except jwt.ExpiredSignatureError:
+            return jsonify({"message": "Token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"message": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+    return decorated
 
 
 # ============================
@@ -164,26 +195,10 @@ def login():
 #   비밀번호 변경 API
 # ============================
 @auth_bp.route("/change-password", methods=["POST"])
+@token_required
 def change_password():
-    # JWT 토큰에서 사용자 정보 가져오기
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return jsonify({"message": "Missing or invalid authorization header"}), 401
-
-    token = auth_header.split(" ")[1]
-
-    try:
-        # 토큰 검증
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("id")
-
-        if not user_id:
-            return jsonify({"message": "Invalid token"}), 401
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "Invalid token"}), 401
+    # 데코레이터에서 사용자 정보 주입
+    user_id = request.user.get("id")
 
     # 요청 데이터 가져오기
     data = request.get_json()
