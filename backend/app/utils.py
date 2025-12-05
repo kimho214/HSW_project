@@ -7,11 +7,11 @@ def format_records(records):
     - None 값을 빈 문자열("")로 변환합니다.
     """
     if records is None:
-        return None
+        return [] if isinstance(records, list) else {}
     
     is_list = isinstance(records, list)
     if not is_list:
-        records = [records]
+        records = [records] if records else []
 
     formatted_records = []
     for record in records:
