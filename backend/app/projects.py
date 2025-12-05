@@ -203,8 +203,8 @@ def get_project_detail(project_id):
             b.address as business_address,
             u.email as business_email
         FROM projects p
-        JOIN users u ON p.business_id = u.id
-        JOIN businesses b ON u.id = b.user_id
+        LEFT JOIN users u ON p.business_id = u.id
+        LEFT JOIN businesses b ON u.id = b.user_id
         WHERE p.id = %s
         """
 
