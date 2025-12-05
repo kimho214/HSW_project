@@ -100,8 +100,8 @@ def get_projects():
             b.business_name,
             b.address as business_address
         FROM projects p
-        JOIN users u ON p.business_id = u.id
-        JOIN businesses b ON u.id = b.user_id
+        LEFT JOIN users u ON p.business_id = u.id
+        LEFT JOIN businesses b ON u.id = b.user_id
         WHERE p.status = %s
         """
         params = [status]
