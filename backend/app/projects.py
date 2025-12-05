@@ -123,6 +123,8 @@ def get_projects():
             # NULL 값을 안전한 빈 문자열로 변환
             if project['location'] is None:
                 project['location'] = ""
+            if 'business_name' in project and project['business_name'] is None:
+                project['business_name'] = ""
             if 'required_skills' in project and project['required_skills'] is None:
                 project['required_skills'] = ""
             if 'salary' in project and project['salary'] is None:
