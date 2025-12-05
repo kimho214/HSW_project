@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.db import get_db
 import os
 from .auth import token_required # auth.py에서 데코레이터 가져오기
+from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -114,31 +115,13 @@ def get_projects():
         cursor.execute(sql, params)
         projects = cursor.fetchall()
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        for project in projects:
-            if 'created_at' in project and hasattr(project['created_at'], 'isoformat'):
-                project['created_at'] = project['created_at'].isoformat()
-            if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
-                project['updated_at'] = project['updated_at'].isoformat()
-            # NULL 값을 안전한 빈 문자열로 변환
-            if project['location'] is None:
-                project['location'] = ""
-            if 'business_name' in project and project['business_name'] is None:
-                project['business_name'] = ""
-            if 'required_skills' in project and project['required_skills'] is None:
-                project['required_skills'] = ""
-            if 'salary' in project and project['salary'] is None:
-                project['salary'] = ""
-            if 'duration' in project and project['duration'] is None:
-                project['duration'] = ""
-            if 'title' in project and project['title'] is None:
-                project['title'] = ""
-
+        # 모든 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
+        formatted_projects = format_records(projects)
 
         return jsonify({
             "message": "success",
-            "count": len(projects),
-            "projects": projects
+            "count": len(formatted_projects),
+            "projects": formatted_projects
         }), 200
 
     except Exception as e:
@@ -183,26 +166,13 @@ def get_my_projects():
         cursor.execute(sql, (request.user["id"],))
         projects = cursor.fetchall()
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        for project in projects:
-            if 'created_at' in project and hasattr(project['created_at'], 'isoformat'):
-                project['created_at'] = project['created_at'].isoformat()
-            if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
-                project['updated_at'] = project['updated_at'].isoformat()
-            # NULL 값을 안전한 빈 문자열로 변환
-            if 'location' in project and project['location'] is None:
-                project['location'] = ""
-            if 'salary' in project and project['salary'] is None:
-                project['salary'] = ""
-            if 'duration' in project and project['duration'] is None:
-                project['duration'] = ""
-            if 'required_skills' in project and project['required_skills'] is None:
-                project['required_skills'] = ""
+        # 모든 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
+        formatted_projects = format_records(projects)
 
         return jsonify({
             "message": "success",
-            "count": len(projects),
-            "projects": projects
+            "count": len(formatted_projects),
+            "projects": formatted_projects
         }), 200
 
     except Exception as e:
@@ -243,25 +213,12 @@ def get_project_detail(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        # 날짜 필드를 JSON으로 직렬화 가능한 문자열로 변환
-        if 'created_at' in project and hasattr(project['created_at'], 'isoformat'):
-            project['created_at'] = project['created_at'].isoformat()
-        if 'updated_at' in project and hasattr(project['updated_at'], 'isoformat'):
-            project['updated_at'] = project['updated_at'].isoformat()
-
-        # NULL 값을 안전한 빈 문자열로 변환
-        if 'location' in project and project['location'] is None:
-            project['location'] = ""
-        if 'salary' in project and project['salary'] is None:
-            project['salary'] = ""
-        if 'duration' in project and project['duration'] is None:
-            project['duration'] = ""
-        if 'required_skills' in project and project['required_skills'] is None:
-            project['required_skills'] = ""
+        # 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
+        formatted_project = format_records(project)
 
         return jsonify({
             "message": "success",
-            "project": project
+            "project": formatted_project
         }), 200
 
     except Exception as e:
