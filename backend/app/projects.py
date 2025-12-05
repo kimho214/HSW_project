@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-import jwt
-from functools import wraps
 import os
+from .auth import token_required # auth.py에서 데코레이터 가져오기
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,36 +12,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY must be set in environment variables")
 
-
-# ============================
-#   JWT 토큰 검증 데코레이터
-# ============================
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        auth_header = request.headers.get('Authorization')
-
-        if auth_header:
-            try:
-                token = auth_header.split(" ")[1]  # "Bearer <token>"
-            except IndexError:
-                return jsonify({"message": "invalid token format"}), 401
-
-        if not token:
-            return jsonify({"message": "token is missing"}), 401
-
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            request.user = payload  # 요청 객체에 사용자 정보 추가
-        except jwt.ExpiredSignatureError:
-            return jsonify({"message": "token expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"message": "invalid token"}), 401
-
-        return f(*args, **kwargs)
-
-    return decorated
 
 
 # ============================
