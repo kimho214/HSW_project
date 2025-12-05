@@ -60,7 +60,7 @@ def create_project():
         ))
 
         conn.commit()
-        project_id = cursor.fetchone()['id']
+        project_id = cursor.fetchone()[0] # DictRow가 아닌 경우를 대비해 인덱스로 접근
 
         return jsonify({
             "message": "project created successfully",
