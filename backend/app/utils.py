@@ -1,6 +1,4 @@
 from datetime import datetime
-from collections.abc import Mapping # Import Mapping for dictionary-like objects
-
 
 def format_records(records):
     """
@@ -8,22 +6,23 @@ def format_records(records):
     - datetime 객체를 ISO 8601 형식의 문자열로 변환합니다.
     - None 값을 빈 문자열("")로 변환합니다.
     """
-    def _format_single(record):
-        if not isinstance(record, Mapping): # DictRow는 Mapping의 인스턴스입니다.
-            return record
-        formatted = {}
+    if records is None:
+        return None
+    
+    is_list = isinstance(records, list)
+    if not is_list:
+        records = [records]
+
+    formatted_records = []
+    for record in records:
+        formatted_record = {}
         for key, value in record.items():
             if isinstance(value, datetime):
-                formatted[key] = value.isoformat()
+                formatted_record[key] = value.isoformat()
             elif value is None:
-                formatted[key] = ""  # None을 빈 문자열로 변환
+                formatted_record[key] = ""
             else:
-                formatted[key] = value
-        return formatted
+                formatted_record[key] = value
+        formatted_records.append(formatted_record)
 
-    if isinstance(records, list):
-        return [_format_single(r) for r in records]
-    elif records is None:
-        return {}  # 단일 레코드가 None일 경우 빈 객체 반환
-    else:
-        return _format_single(records)
+    return formatted_records if is_list else formatted_records[0]
