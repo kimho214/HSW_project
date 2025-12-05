@@ -16,9 +16,8 @@ def get_db():
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise ValueError("DATABASE_URL must be set in environment variables for PostgreSQL")
-        g.db = psycopg2.connect(database_url)
-    # 커서 팩토리를 설정하여 결과를 딕셔너리 형태로 받도록 합니다.
-    g.db.cursor_factory = DictCursor
+        # 연결 시 cursor_factory를 한 번만 설정합니다.
+        g.db = psycopg2.connect(database_url, cursor_factory=DictCursor)
     return g.db
 
 def close_db(e=None):
