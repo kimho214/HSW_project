@@ -13,7 +13,8 @@ def _format_single_record(record):
         if isinstance(value, datetime):
             formatted_record[key] = value.isoformat()
         elif value is None:
-            formatted_record[key] = "" # 사용자 요청에 따라 None을 빈 문자열로 변환
+            # 프론트엔드에서 null 체크를 용이하게 하기 위해 None을 그대로 유지 (JSON에서 null로 변환됨)
+            formatted_record[key] = None
         else:
             formatted_record[key] = value
     return formatted_record
