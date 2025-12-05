@@ -51,7 +51,7 @@ def create_application():
         """
         cursor.execute(sql, (project_id, request.user["id"], cover_letter))
         conn.commit()
-        application_id = cursor.fetchone()['id']
+        application_id = cursor.fetchone()[0] # DictRow가 아닌 경우를 대비해 인덱스로 접근
 
         return jsonify({
             "message": "application submitted successfully",
