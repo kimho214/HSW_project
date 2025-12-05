@@ -160,6 +160,8 @@ def get_projects():
                 project['salary'] = ""
             if 'duration' in project and project['duration'] is None:
                 project['duration'] = ""
+            if 'title' in project and project['title'] is None:
+                project['title'] = ""
 
 
         return jsonify({
