@@ -16,10 +16,11 @@ def get_db():
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise ValueError("DATABASE_URL must be set in environment variables for PostgreSQL")
-        g.db = psycopg2.connect(database_url)
-    # 커서 팩토리를 설정하여 결과를 딕셔너리 형태로 받도록 합니다.
-    g.db.cursor_factory = DictCursor
-    return g.db
+        # 연결과 커서를 함께 컨텍스트에 저장
+        conn = psycopg2.connect(database_url)
+        g.db = conn
+        g.cursor = conn.cursor(cursor_factory=DictCursor)
+    return g.db, g.cursor
 
 def close_db(e=None):
     """
@@ -27,4 +28,8 @@ def close_db(e=None):
     """
     db = g.pop('db', None)
     if db is not None:
+        # 커서도 함께 닫아줍니다.
+        cursor = g.pop('cursor', None)
+        if cursor is not None:
+            cursor.close()
         db.close()
