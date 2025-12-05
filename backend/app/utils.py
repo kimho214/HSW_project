@@ -8,21 +8,33 @@ def format_records(records):
     """
     if records is None:
         return [] if isinstance(records, list) else {}
-    
+
     is_list = isinstance(records, list)
     if not is_list:
-        records = [records] if records else []
+        # If it's not a list, it should be a dictionary-like object (DictRow).
+        # If it's not a dict, it's an unexpected type for formatting.
+        if not isinstance(records, dict):
+            # Log the unexpected type for debugging
+            print(f"DEBUG: format_records received unexpected non-dict, non-list type: {type(records)}, value: {records}")
+            return records # Return as is, or raise a more specific error, to prevent crash
+        records = [records] # Wrap single dict-like object in a list for uniform processing
 
     formatted_records = []
     for record in records:
-        formatted_record = {}
-        for key, value in record.items():
-            if isinstance(value, datetime):
-                formatted_record[key] = value.isoformat()
-            elif value is None:
-                formatted_record[key] = ""
-            else:
-                formatted_record[key] = value
-        formatted_records.append(formatted_record)
+        if isinstance(record, dict): # Ensure 'record' is a dict-like object before calling .items()
+            formatted_record = {}
+            for key, value in record.items():
+                if isinstance(value, datetime):
+                    formatted_record[key] = value.isoformat()
+                elif value is None:
+                    formatted_record[key] = ""
+                else:
+                    formatted_record[key] = value
+            formatted_records.append(formatted_record)
+        else:
+            # If an item in the list is not a dict, it's unexpected.
+            # For now, just append it as is, or handle as an error.
+            print(f"DEBUG: format_records found non-dict item in list: {type(record)}, value: {record}")
+            formatted_records.append(record)
 
     return formatted_records if is_list else formatted_records[0]
