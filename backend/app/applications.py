@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
-from app.projects import token_required
+from .auth import token_required
+from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 import os
 from dotenv import load_dotenv
 
@@ -11,6 +12,10 @@ applications_bp = Blueprint("applications", __name__)
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY must be set in environment variables")
+
+# projects.py에서 token_required를 가져오는 대신 auth.py에서 가져오도록 수정
+# from app.projects import token_required -> from .auth import token_required
+
 
 
 # ============================
@@ -109,17 +114,12 @@ def get_project_applications(project_id):
         cursor.execute(sql, (project_id,))
         applications = cursor.fetchall()
 
-        # 날짜 형식 변환 (JSON 직렬화 오류 방지)
-        for app in applications:
-            if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
-                app['created_at'] = app['created_at'].isoformat()
-            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
-                app['updated_at'] = app['updated_at'].isoformat()
+        formatted_applications = format_records(applications)
 
         return jsonify({
             "message": "success",
-            "count": len(applications),
-            "applications": applications
+            "count": len(formatted_applications),
+            "applications": formatted_applications
         }), 200
 
     except Exception as e:
@@ -168,20 +168,12 @@ def get_my_applications():
         cursor.execute(sql, (request.user["id"],))
         applications = cursor.fetchall()
 
-        # 날짜 형식 변환 (JSON 직렬화 오류 방지)
-        for app in applications:
-            if 'created_at' in app and hasattr(app['created_at'], 'isoformat'):
-                app['created_at'] = app['created_at'].isoformat()
-            if 'updated_at' in app and hasattr(app['updated_at'], 'isoformat'):
-                app['updated_at'] = app['updated_at'].isoformat()
-            # NULL 값을 안전한 빈 문자열로 변환
-            if 'cover_letter' in app and app['cover_letter'] is None:
-                app['cover_letter'] = ""
+        formatted_applications = format_records(applications)
 
         return jsonify({
             "message": "success",
-            "count": len(applications),
-            "applications": applications
+            "count": len(formatted_applications),
+            "applications": formatted_applications
         }), 200
 
     except Exception as e:
