@@ -131,7 +131,7 @@ def get_public_profiles():
         # 공개 프로필만 조회
         sql = """
         SELECT
-            s.user_id as id,
+            s.user_id,
             s.name as username,
             s.introduction,
             s.skills,
