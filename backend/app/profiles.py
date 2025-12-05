@@ -176,7 +176,7 @@ def get_profile_by_id(user_id):
         sql = """
         SELECT
             s.*,
-            u.email as user_email
+            u.email
         FROM students s
         JOIN users u ON s.user_id = u.id
         WHERE s.user_id = %s
