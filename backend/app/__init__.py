@@ -29,4 +29,21 @@ def create_app():
     app.register_blueprint(ai.ai_bp, url_prefix='/ai')
     app.register_blueprint(messages.messages_bp, url_prefix='/messages')
 
+    # 루트 경로 헬스체크 엔드포인트
+    @app.route('/')
+    def index():
+        return {
+            "message": "이음 API Server",
+            "status": "running",
+            "version": "1.0.0",
+            "endpoints": {
+                "auth": "/auth",
+                "projects": "/projects",
+                "applications": "/applications",
+                "profiles": "/profiles",
+                "ai": "/ai",
+                "messages": "/messages"
+            }
+        }, 200
+
     return app
