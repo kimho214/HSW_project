@@ -20,8 +20,20 @@ def init_database():
         return
 
     try:
-        # PostgreSQL 연결
-        conn = psycopg2.connect(database_url)
+        # PostgreSQL 연결 (SSL 모드 설정)
+        # Render는 SSL을 요구하지만, Windows에서 인증서 문제가 있을 수 있음
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
+        conn = psycopg2.connect(
+            database_url,
+            sslmode='require',
+            sslrootcert='',
+            sslcert='',
+            sslkey=''
+        )
         cursor = conn.cursor()
 
         print("✅ 데이터베이스 연결 성공")
@@ -56,8 +68,11 @@ def init_database():
 
     except Exception as e:
         print(f"❌ 오류 발생: {e}")
-        if conn:
-            conn.rollback()
+        try:
+            if 'conn' in locals() and conn:
+                conn.rollback()
+        except:
+            pass
 
 if __name__ == "__main__":
     init_database()
