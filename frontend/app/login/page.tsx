@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +26,14 @@ export default function LoginPage() {
 
       if (response.ok && data.message === "success") {
         // JWT 쿠키 저장 (보안 플래그 추가)
-        document.cookie = `token=${data.token}; path=/; SameSite=Strict`;
+        document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=43200`;
+
+        console.log('로그인 성공, 토큰 저장됨');
 
         alert("로그인 성공!");
 
-        // 메인 페이지로 이동
-        router.push("/");
+        // 페이지 새로고침으로 Header 상태 즉시 업데이트
+        window.location.href = "/";
       } else {
         setError(data.message || "이메일 또는 비밀번호가 올바르지 않습니다.");
       }
