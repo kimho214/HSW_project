@@ -61,7 +61,8 @@ export default function SignupPage() {
       }
 
     } catch (err) {
-      setError("서버와 통신 중 오류가 발생했습니다.");
+      console.error("Signup error:", err);
+      setError(`서버와 통신 중 오류가 발생했습니다. API URL: ${process.env.NEXT_PUBLIC_API_URL || "환경변수 미설정"}`);
     }
   };
 

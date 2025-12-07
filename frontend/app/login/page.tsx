@@ -38,7 +38,8 @@ export default function LoginPage() {
         setError(data.message || "이메일 또는 비밀번호가 올바르지 않습니다.");
       }
     } catch (err) {
-      setError("서버와 통신 중 오류가 발생했습니다.");
+      console.error("Login error:", err);
+      setError(`서버와 통신 중 오류가 발생했습니다. API URL: ${process.env.NEXT_PUBLIC_API_URL || "환경변수 미설정"}`);
     } finally {
       setLoading(false);
     }
