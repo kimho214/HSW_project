@@ -13,23 +13,9 @@ services:
           name: ieum-db
           property: connectionString
       - key: ALLOWED_ORIGINS
-        value: https://ieum-frontend.onrender.com
+        value: https://your-vercel-app.vercel.app
       - key: GOOGLE_API_KEY
         sync: false
-
-  # 프론트엔드 Next.js 앱
-  - type: web
-    name: ieum-frontend
-    runtime: node
-    buildCommand: "cd frontend && npm install && npm run build"
-    startCommand: "cd frontend && npm start"
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://ieum-backend.onrender.com
-      - key: NEXT_PUBLIC_SOCKET_URL
-        value: https://ieum-backend.onrender.com
-      - key: NODE_ENV
-        value: production
 
 databases:
   - name: ieum-db
