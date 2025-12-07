@@ -1,0 +1,37 @@
+services:
+  # 백엔드 Flask API 서버
+  - type: web
+    name: ieum-backend
+    runtime: python
+    buildCommand: "cd backend && pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "cd backend && gunicorn -w 4 -b 0.0.0.0:$PORT main:app"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ieum-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: https://ieum-frontend.onrender.com
+      - key: GOOGLE_API_KEY
+        sync: false
+
+  # 프론트엔드 Next.js 앱
+  - type: web
+    name: ieum-frontend
+    runtime: node
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm start"
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://ieum-backend.onrender.com
+      - key: NEXT_PUBLIC_SOCKET_URL
+        value: https://ieum-backend.onrender.com
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: ieum-db
+    databaseName: ieum
+    user: ieum_user
