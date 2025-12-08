@@ -128,13 +128,7 @@ def get_public_profiles():
         # 공개 프로필만 조회
         sql = """
         SELECT
-            s.user_id as id,
-            s.name as username,
-            s.introduction,
-            s.skills,
-            s.portfolio_url,
-            s.github_url,
-            s.linkedin_url,
+            s.*,
             u.email
         FROM students s
         JOIN users u ON s.user_id = u.id
