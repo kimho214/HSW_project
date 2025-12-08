@@ -3,6 +3,7 @@ from app.db import get_db
 import os
 from .auth import token_required # auth.py에서 데코레이터 가져오기
 from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
+from psycopg2.extras import DictCursor
 import traceback # traceback 모듈 임포트
 from dotenv import load_dotenv
 
@@ -190,12 +191,10 @@ def get_my_projects():
 @projects_bp.route("/<int:project_id>", methods=["GET"])
 def get_project_detail(project_id):
     conn = None
-    import traceback # 에러 로깅을 위해 traceback 임포트
-    from psycopg2.extras import DictCursor # DictCursor를 임포트합니다.
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(cursor_factory=DictCursor) # DictCursor를 사용하도록 명시합니다.
+        cursor = conn.cursor(cursor_factory=DictCursor) # 결과를 딕셔너리 형태로 받기 위해 DictCursor를 사용합니다.
 
         sql = """
         SELECT
@@ -214,9 +213,7 @@ def get_project_detail(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        # fetchone()으로 가져온 단일 레코드를 리스트에 담아 format_records에 전달하고,
-        # 결과 리스트에서 첫 번째 항목을 다시 추출합니다.
-        formatted_project = format_records([project])[0]
+        formatted_project = format_records(project)
 
         return jsonify({
             "message": "success",
