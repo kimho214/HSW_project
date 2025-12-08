@@ -83,6 +83,8 @@ def create_application():
 @token_required
 def get_project_applications(project_id):
     conn = None
+    import traceback # 에러 로깅을 위해 traceback 임포트
+    from psycopg2.extras import DictCursor # DictCursor를 임포트합니다.
     cursor = None
 
     try:
@@ -119,7 +121,7 @@ def get_project_applications(project_id):
         cursor.execute(sql, (project_id,))
         applications = cursor.fetchall()
 
-        formatted_applications = format_records(applications)
+        formatted_applications = format_records([applications])[0]
 
         return jsonify({
             "message": "success",
