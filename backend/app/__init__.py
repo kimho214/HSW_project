@@ -1,6 +1,10 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import os
+
+# SocketIO 인스턴스를 전역으로 생성 (app과 분리)
+socketio = SocketIO(cors_allowed_origins="*")
 
 def create_app():
     app = Flask(__name__)
@@ -8,6 +12,9 @@ def create_app():
     # 환경 변수에서 CORS 설정 로드
     allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(',')
     CORS(app, resources={r"/*": {"origins": allowed_origins}}, supports_credentials=True)
+
+    # SocketIO를 Flask 앱에 연결
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
 
     # 데이터베이스 초기화 함수 등록
     from . import db # db는 함수 밖에서 import 해도 안전합니다.
@@ -21,6 +28,7 @@ def create_app():
         from . import profiles # 'students.py' -> 'profiles.py' 로 수정
         from . import ai
         from . import messages # 'chat.py' -> 'messages.py' 로 수정
+        from . import socket_events # Socket.IO 이벤트 핸들러 등록
 
     app.register_blueprint(auth.auth_bp, url_prefix='/auth')
     app.register_blueprint(projects.projects_bp, url_prefix='/projects')

@@ -66,7 +66,8 @@ export default function ChatPage() {
     }
 
     // 3. 웹소켓 서버에 연결합니다.
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+    // Flask-SocketIO는 같은 서버(API URL)에서 동작합니다
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     const newSocket = io(socketUrl);
     setSocket(newSocket);
 
