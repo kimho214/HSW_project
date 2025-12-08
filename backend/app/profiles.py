@@ -120,7 +120,7 @@ def get_public_profiles():
 
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=DictCursor)
 
         # 쿼리 파라미터로 필터링
         skill = request.args.get("skill")
