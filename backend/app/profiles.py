@@ -174,6 +174,8 @@ def get_public_profiles():
 @profiles_bp.route("/<int:user_id>", methods=["GET"])
 def get_profile_by_id(user_id):
     conn = None
+    import traceback # 에러 로깅을 위해 traceback 임포트
+    from psycopg2.extras import DictCursor # DictCursor를 임포트합니다.
     cursor = None
     try:
         conn = get_db()
@@ -202,7 +204,7 @@ def get_profile_by_id(user_id):
             return jsonify({"message": "Profile not found or is not public"}), 404
 
         # format_records 함수는 단일 레코드도 처리할 수 있으므로, 더 간결하게 호출합니다.
-        formatted_profile = format_records(profile) # 이 부분이 중요합니다. profile 객체 전체를 전달해야 합니다.
+        formatted_profile = format_records([profile])[0] # 이 부분이 중요합니다. profile 객체 전체를 전달해야 합니다.
         return jsonify({
             "message": "success",
             "profile": formatted_profile
