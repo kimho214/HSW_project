@@ -4,6 +4,7 @@ from .auth import token_required # auth.py에서 데코레이터 가져오기
 from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 import os
 from dotenv import load_dotenv
+from psycopg2.extras import DictCursor
 import traceback # 에러 로깅을 위해 상단으로 이동
 
 load_dotenv()
@@ -177,8 +178,7 @@ def get_profile_by_id(user_id):
     cursor = None
     try:
         conn = get_db()
-        # db.py에서 DictCursor를 기본으로 설정하므로, 추가 설정이 필요 없습니다.
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=DictCursor) # 결과를 딕셔너리 형태로 받기 위해 DictCursor를 사용합니다.
         sql = """
         SELECT
             s.user_id as id,
@@ -201,8 +201,7 @@ def get_profile_by_id(user_id):
         if not profile:
             return jsonify({"message": "Profile not found or is not public"}), 404
 
-        # format_records 함수는 단일 레코드도 처리할 수 있으므로, 더 간결하게 호출합니다.
-        formatted_profile = format_records(profile) # 이 부분이 중요합니다. profile 객체 전체를 전달해야 합니다.
+        formatted_profile = format_records(profile)
         return jsonify({
             "message": "success",
             "profile": formatted_profile
