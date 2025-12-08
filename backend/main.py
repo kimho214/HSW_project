@@ -1,3 +1,7 @@
+# eventlet monkey patching을 가장 먼저 실행 (다른 import보다 앞에 위치)
+import eventlet
+eventlet.monkey_patch()
+
 from app import create_app, socketio
 
 # Flask 앱 생성 (CORS는 __init__.py에서 설정됨)
