@@ -28,7 +28,7 @@ def create_app():
         from . import profiles # 'students.py' -> 'profiles.py' 로 수정
         from . import ai
         from . import messages # 'chat.py' -> 'messages.py' 로 수정
-        from . import socket_events # Socket.IO 이벤트 핸들러 등록
+        # socket_events는 main.py에서 명시적으로 등록됨
 
     app.register_blueprint(auth.auth_bp, url_prefix='/auth')
     app.register_blueprint(projects.projects_bp, url_prefix='/projects')
