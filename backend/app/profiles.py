@@ -204,8 +204,8 @@ def get_profile_by_id(user_id):
         if not profile:
             return jsonify({"message": "profile not found"}), 404
 
-        # fetchone()으로 가져온 단일 레코드를 리스트에 담아 format_records에 전달합니다.
-        formatted_profile = format_records([profile])[0]
+        # format_records 함수는 단일 레코드도 처리할 수 있으므로, 더 간결하게 호출합니다.
+        formatted_profile = format_records(profile)
         return jsonify({
             "message": "success",
             "profile": formatted_profile
