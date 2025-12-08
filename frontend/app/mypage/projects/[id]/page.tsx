@@ -107,6 +107,43 @@ export default function ProjectApplicantsPage() {
     }
   };
 
+  const handleStatusChange = async (applicationId: number, newStatus: "ACCEPTED" | "REJECTED") => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await fetch(`${apiUrl}/applications/${applicationId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(newStatus === "ACCEPTED" ? "지원을 수락했습니다." : "지원을 거절했습니다.");
+        // 지원자 목록 새로고침
+        fetchApplicants(token, projectId);
+      } else {
+        alert(data.message || "상태 변경에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("상태 변경 실패:", err);
+      alert("서버와 연결할 수 없습니다.");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const styles = {
       PENDING: "bg-yellow-100 text-yellow-800",
@@ -159,9 +196,28 @@ export default function ProjectApplicantsPage() {
                       {new Date(applicant.created_at).toLocaleDateString("ko-KR")}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
                     {getStatusBadge(applicant.status)}
-                    {/* 채팅하기 버튼 추가 */}
+
+                    {/* 대기중 상태일 때만 수락/거절 버튼 표시 */}
+                    {applicant.status === "PENDING" && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange(applicant.id, "ACCEPTED")}
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                        >
+                          수락
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(applicant.id, "REJECTED")}
+                          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                        >
+                          거절
+                        </button>
+                      </>
+                    )}
+
+                    {/* 채팅하기 버튼 */}
                     {userInfo && (
                       <Link
                         href={`/chat/${createChatRoomId(
