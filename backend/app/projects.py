@@ -190,6 +190,7 @@ def get_my_projects():
 @projects_bp.route("/<int:project_id>", methods=["GET"])
 def get_project_detail(project_id):
     conn = None
+    import traceback # 에러 로깅을 위해 traceback 임포트
     from psycopg2.extras import DictCursor # DictCursor를 임포트합니다.
     cursor = None
     try:
@@ -213,8 +214,9 @@ def get_project_detail(project_id):
         if not project:
             return jsonify({"message": "project not found"}), 404
 
-        # 레코드의 None 값을 빈 문자열로, datetime을 문자열로 변환
-        formatted_project = format_records(project)
+        # fetchone()으로 가져온 단일 레코드를 리스트에 담아 format_records에 전달하고,
+        # 결과 리스트에서 첫 번째 항목을 다시 추출합니다.
+        formatted_project = format_records([project])[0]
 
         return jsonify({
             "message": "success",
@@ -222,6 +224,9 @@ def get_project_detail(project_id):
         }), 200
 
     except Exception as e:
+        # 에러 발생 시 서버 로그에 상세 내용을 출력하여 디버깅을 돕습니다.
+        print(f"Error in get_project_detail for project_id {project_id}:")
+        traceback.print_exc()
         return jsonify({"message": "Failed to fetch project details"}), 500
     
     finally:
