@@ -102,7 +102,12 @@ def get_project_applications(project_id):
         # 지원자 목록 조회
         sql = """
         SELECT
-            a.*,
+            a.id,
+            a.project_id,
+            a.student_id,
+            a.cover_letter,
+            UPPER(a.status) as status,
+            a.created_at,
             s.name as student_name,
             u.email as student_email
         FROM applications a
