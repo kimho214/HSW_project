@@ -174,10 +174,13 @@ def get_public_profiles():
 def get_profile_by_id(user_id):
     conn = None
     cursor = None
+    from psycopg2.extras import DictCursor # DictCursor를 사용하기 위해 import
+    import traceback # 에러 로깅을 위해 traceback 임포트
 
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        # 결과를 딕셔너리 형태로 받기 위해 DictCursor를 사용합니다.
+        cursor = conn.cursor(cursor_factory=DictCursor)
 
         sql = """
         SELECT
@@ -201,13 +204,17 @@ def get_profile_by_id(user_id):
         if not profile:
             return jsonify({"message": "profile not found"}), 404
 
-        formatted_profile = format_records(profile)
+        # fetchone()으로 가져온 단일 레코드를 리스트에 담아 format_records에 전달합니다.
+        formatted_profile = format_records([profile])[0]
         return jsonify({
             "message": "success",
             "profile": formatted_profile
         }), 200
 
     except Exception as e:
+        # 에러 발생 시 서버 로그에 상세 내용을 출력하여 디버깅을 돕습니다.
+        print(f"Error in get_profile_by_id for user_id {user_id}:")
+        traceback.print_exc()
         return jsonify({"message": "Failed to fetch profile"}), 500
 
     finally:
