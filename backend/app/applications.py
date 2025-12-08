@@ -119,7 +119,7 @@ def get_project_applications(project_id):
         ORDER BY a.created_at DESC
         """
         cursor.execute(sql, (project_id,))
-        applications = cursor.fetchall()
+        applications = cursor.fetchone()
 
         formatted_applications = format_records([applications])[0]
 
