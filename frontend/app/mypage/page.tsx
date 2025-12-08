@@ -12,7 +12,7 @@ interface Application {
   salary: string;
   location: string;
   business_name: string;
-  business_id: string; // 실제로는 business의 이메일 (채팅방 ID 생성에 사용)
+  business_email: string; // 사업자 이메일 (채팅방 ID 생성에 사용)
   status: string;
   created_at: string;
   cover_letter: string;
@@ -607,10 +607,10 @@ export default function MyPage() {
                               </p>
                             </details>
                           )}
-                          {app.status === "ACCEPTED" && userInfo && (
+                          {app.status === "ACCEPTED" && userInfo && app.business_email && (
                             <div className="mt-3">
                               <Link
-                                href={`/chat/${createChatRoomId(userInfo.email, app.business_id)}?name=${encodeURIComponent(app.business_name)}`}
+                                href={`/chat/${createChatRoomId(userInfo.email, app.business_email)}?name=${encodeURIComponent(app.business_name)}`}
                                 className="inline-block px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
                               >
                                 채팅하기
