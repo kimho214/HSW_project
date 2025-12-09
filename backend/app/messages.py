@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
 from urllib.parse import unquote
-from .auth import token_required
+from app.projects import token_required
 import os
 from dotenv import load_dotenv
 
