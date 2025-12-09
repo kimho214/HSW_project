@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app.db import get_db
 from urllib.parse import unquote
-from app.projects import token_required
+from .auth import token_required
+from .utils import format_records # 데이터 포맷팅 유틸리티 가져오기
 import os
 from dotenv import load_dotenv
 
@@ -33,13 +34,11 @@ def get_messages(room_id):
         sql = "SELECT room_id, sender, message, created_at FROM messages WHERE room_id = %s ORDER BY created_at ASC"
         cursor.execute(sql, (decoded_room_id,))
         messages = cursor.fetchall()
-        
-        # 중요: DB에서 가져온 datetime 객체를 JSON으로 변환할 수 있도록 문자열로 직접 변환합니다.
-        for message in messages:
-            if 'created_at' in message and hasattr(message['created_at'], 'isoformat'):
-                message['created_at'] = message['created_at'].isoformat()
 
-        return jsonify({"messages": messages}), 200
+        # DB 레코드를 API 응답에 적합한 형식으로 변환 (datetime -> str, None -> "")
+        formatted_messages = format_records(messages)
+
+        return jsonify({"messages": formatted_messages}), 200
 
     except Exception as e:
         return jsonify({"message": "Failed to fetch messages"}), 500
