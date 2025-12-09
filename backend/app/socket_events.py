@@ -6,6 +6,7 @@ from flask_socketio import emit, join_room
 from app.db import get_db
 import logging
 from urllib.parse import unquote
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,17 @@ def register_socket_handlers(socketio):
 
         decoded_room_id = unquote(room_id_raw)
 
+        # 클라이언트에 전송할 데이터 객체를 새로 생성합니다.
+        # DB에서 가져오는 데이터와 형식을 맞추기 위해 타임스탬프를 추가합니다.
+        broadcast_data = {
+            'room_id': decoded_room_id,
+            'sender': sender,
+            'message': message,
+            'created_at': datetime.datetime.utcnow().isoformat() + 'Z'  # ISO 8601 형식, UTC 명시
+        }
+
         # 채팅방의 모든 사용자에게 메시지 전송
-        emit('receive_message', data, room=decoded_room_id)
+        emit('receive_message', broadcast_data, room=decoded_room_id)
         print(f'Message emitted to room: {decoded_room_id}')
 
         # DB에 메시지 저장
