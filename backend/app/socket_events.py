@@ -5,6 +5,7 @@ Socket.IO 이벤트 핸들러
 from flask_socketio import emit, join_room
 from app.db import get_db
 import logging
+from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +28,11 @@ def register_socket_handlers(socketio):
 
     @socketio.on('join_room')
     def handle_join_room(room_id):
-        """클라이언트가 특정 채팅방에 참여"""
-        join_room(room_id)
-        logger.info(f'Client joined room: {room_id}')
-        print(f'Client joined room: {room_id}')  # 디버깅용
+        """클라이언트가 특정 채팅방에 참여. room_id를 디코딩하여 사용."""
+        decoded_room_id = unquote(room_id)
+        join_room(decoded_room_id)
+        logger.info(f'Client joined room: {decoded_room_id} (raw: {room_id})')
+        print(f'Client joined room: {decoded_room_id} (raw: {room_id})')  # 디버깅용
 
     @socketio.on('send_message')
     def handle_send_message(data):
@@ -41,18 +43,20 @@ def register_socket_handlers(socketio):
         """
         print(f'Received message: {data}')  # 디버깅용
 
-        room_id = data.get('room_id')
+        room_id_raw = data.get('room_id')
         message = data.get('message')
         sender = data.get('sender')
 
-        if not all([room_id, message, sender]):
+        if not all([room_id_raw, message, sender]):
             logger.error('Missing required fields in send_message')
             print('Missing required fields in send_message')
             return
 
+        decoded_room_id = unquote(room_id_raw)
+
         # 채팅방의 모든 사용자에게 메시지 전송
-        emit('receive_message', data, room=room_id)
-        print(f'Message emitted to room: {room_id}')
+        emit('receive_message', data, room=decoded_room_id)
+        print(f'Message emitted to room: {decoded_room_id}')
 
         # DB에 메시지 저장
         conn = None
@@ -62,11 +66,11 @@ def register_socket_handlers(socketio):
             cursor = conn.cursor()
 
             sql = "INSERT INTO messages (room_id, sender, message) VALUES (%s, %s, %s)"
-            cursor.execute(sql, (room_id, sender, message))
+            cursor.execute(sql, (decoded_room_id, sender, message))
             conn.commit()
 
-            logger.info(f'Message saved: room={room_id}, sender={sender}')
-            print(f'Message saved to DB: room={room_id}, sender={sender}')
+            logger.info(f'Message saved: room={decoded_room_id}, sender={sender}')
+            print(f'Message saved to DB: room={decoded_room_id}, sender={sender}')
 
         except Exception as e:
             logger.error(f'Failed to save message: {e}')
